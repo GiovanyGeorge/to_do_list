@@ -1,0 +1,54 @@
+{
+  "app": {
+    "title": "LifeFlow",
+    "subtitle": "Personal Desktop Productivity Manager"
+  },
+  "nav": {
+    "dashboard": "Dashboard",
+    "myDay": "My Day",
+    "inbox": "Inbox",
+    "allTasks": "All Tasks",
+    "projects": "Projects",
+    "calendar": "Calendar",
+    "habits": "Habits",
+    "goals": "Goals",
+    "notes": "Notes",
+    "analytics": "Analytics",
+    "archive": "Archive",
+    "widgets": "Widget Center",
+    "settings": "Settings"
+  },
+  "header": {
+    "searchPlaceholder": "Search tasks, projects, notes... (Ctrl+K)",
+    "quickAdd": "Quick Add",
+    "notifications": "Notifications"
+  },
+  "dashboard": {
+    "greeting": {
+      "morning": "Good morning",
+      "afternoon": "Good afternoon",
+      "evening": "Good evening"
+    },
+    "summary": "Here is an overview of your schedule and focus for today.",
+    "todayTasks": "Today's Tasks",
+    "overdueTasks": "Overdue Tasks",
+    "activeProjects": "Active Projects",
+    "habitsToday": "Today's Habits",
+    "weeklyProductivity": "Weekly Productivity",
+    "progress": "Daily Progress",
+    "noTasks": "No tasks scheduled for today. Take a break or add a new task."
+  },
+  "settings": {
+    "language": "Language",
+    "theme": "Theme",
+    "arabic": "العربية (Arabic)",
+    "english": "English"
+  },
+  "common": {
+    "close": "Close",
+    "minimize": "Minimize",
+    "maximize": "Maximize",
+    "restore": "Restore",
+    "loading": "Loading..."
+  }
+}

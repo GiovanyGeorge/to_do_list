@@ -1,0 +1,54 @@
+{
+  "app": {
+    "title": "لايف فلو",
+    "subtitle": "إدارة الإنتاجية الشخصية لسطح المكتب"
+  },
+  "nav": {
+    "dashboard": "لوحة التحكم",
+    "myDay": "يومي",
+    "inbox": "صندوق الوارد",
+    "allTasks": "جميع المهام",
+    "projects": "المشاريع",
+    "calendar": "التقويم",
+    "habits": "العادات",
+    "goals": "الأهداف",
+    "notes": "الملاحظات",
+    "analytics": "التحليلات",
+    "archive": "الأرشيف",
+    "widgets": "مركز الأدوات",
+    "settings": "الإعدادات"
+  },
+  "header": {
+    "searchPlaceholder": "بحث في المهام والمشاريع والملاحظات... (Ctrl+K)",
+    "quickAdd": "إضافة سريعة",
+    "notifications": "التنبيهات"
+  },
+  "dashboard": {
+    "greeting": {
+      "morning": "صباح الخير",
+      "afternoon": "مساء الخير",
+      "evening": "مساء الخير"
+    },
+    "summary": "إليك نظرة عامة على جدولك وتركيزك اليوم.",
+    "todayTasks": "مهام اليوم",
+    "overdueTasks": "مهام متأخرة",
+    "activeProjects": "المشاريع النشطة",
+    "habitsToday": "عادات اليوم",
+    "weeklyProductivity": "الإنتاجية الأسبوعية",
+    "progress": "التقدم اليومي",
+    "noTasks": "لا توجد مهام مجدولة لليوم. خذ قسطاً من الراحة أو أضف مهمة جديدة."
+  },
+  "settings": {
+    "language": "اللغة",
+    "theme": "المظهر",
+    "arabic": "العربية (Arabic)",
+    "english": "English"
+  },
+  "common": {
+    "close": "إغلاق",
+    "minimize": "تصغير",
+    "maximize": "تكبير",
+    "restore": "استعادة",
+    "loading": "جاري التحميل..."
+  }
+}

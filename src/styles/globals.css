@@ -1,0 +1,53 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --color-bg-main: #111318;
+    --color-bg-sidebar: #151920;
+    --color-bg-card: #191D24;
+    --color-bg-elevated: #252B35;
+    --color-accent: #E99A43;
+    --color-text-primary: #F3F4F6;
+    --color-text-secondary: #9299A5;
+  }
+
+  body {
+    background-color: var(--color-bg-main);
+    color: var(--color-text-primary);
+    font-family: 'Inter', system-ui, sans-serif;
+  }
+
+  [dir="rtl"] body {
+    font-family: 'Cairo', system-ui, sans-serif;
+  }
+}
+
+/* Custom scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #2A303C;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #374151;
+}
+
+/* Electron window drag helpers */
+.titlebar-drag-region {
+  -webkit-app-region: drag;
+}
+
+.titlebar-no-drag {
+  -webkit-app-region: no-drag;
+}
