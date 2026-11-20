@@ -124,6 +124,7 @@ export interface TaskWithDetails extends TaskRecord {
   is_in_my_day?: boolean;
   blocking_tasks?: string[];
   blocked_by_incomplete_count?: number;
+  reminder_at?: string | null;
 }
 
 export interface CreateTaskInput {
@@ -139,6 +140,7 @@ export interface CreateTaskInput {
   tag_ids?: string[];
   subtasks?: string[];
   plan_date?: string;
+  reminder_at?: string;
 }
 
 export interface UpdateTaskInput {
@@ -153,6 +155,7 @@ export interface UpdateTaskInput {
   completed_at?: string | null;
   recurrence_rule?: string | null;
   archived_at?: string | null;
+  reminder_at?: string | null;
 }
 
 export interface TaskFilterParams {

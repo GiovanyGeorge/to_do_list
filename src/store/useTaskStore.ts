@@ -89,6 +89,7 @@ export const useTaskStore = create<TaskStoreState>((set) => ({
           })),
           tags: [],
           is_in_my_day: !!input.plan_date,
+          reminder_at: input.reminder_at || null,
         };
         fallbackTasks.unshift(mockTask);
         set((state) => ({ tasks: [mockTask, ...state.tasks] }));

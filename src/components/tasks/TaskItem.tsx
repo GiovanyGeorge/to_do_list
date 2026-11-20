@@ -8,6 +8,7 @@ import {
   GripVertical,
   Trash2,
   ListTree,
+  Bell,
 } from "lucide-react";
 import clsx from "clsx";
 import type { TaskWithDetails } from "@shared/types/database";
@@ -43,6 +44,20 @@ export const TaskItem: React.FC<TaskItemProps> = ({
         month: "short",
         day: "numeric",
       }).format(new Date(task.due_at))
+    : null;
+
+  const formattedDueTime = task.due_at
+    ? new Intl.DateTimeFormat(undefined, {
+        hour: "numeric",
+        minute: "2-digit",
+      }).format(new Date(task.due_at))
+    : null;
+
+  const formattedReminder = task.reminder_at
+    ? new Intl.DateTimeFormat(undefined, {
+        hour: "numeric",
+        minute: "2-digit",
+      }).format(new Date(task.reminder_at))
     : null;
 
   const handleToggle = (e: React.MouseEvent) => {
@@ -166,7 +181,7 @@ export const TaskItem: React.FC<TaskItemProps> = ({
               </span>
             )}
 
-            {/* Due date */}
+            {/* Due date & time */}
             {formattedDueDate && (
               <span
                 className={clsx(
@@ -180,6 +195,22 @@ export const TaskItem: React.FC<TaskItemProps> = ({
                   <Calendar className="w-3 h-3 text-text-muted" />
                 )}
                 {formattedDueDate}
+                {formattedDueTime && (
+                  <span className="font-mono text-[10px] text-text-muted">
+                    ({formattedDueTime})
+                  </span>
+                )}
+              </span>
+            )}
+
+            {/* Reminder pill */}
+            {formattedReminder && (
+              <span
+                className="inline-flex items-center gap-1 text-[11px] font-mono text-accent bg-accent/10 px-2 py-0.5 rounded-full border border-accent/20"
+                title={`Remind at: ${formattedReminder}`}
+              >
+                <Bell className="w-3 h-3 text-accent" />
+                <span>Remind at {formattedReminder}</span>
               </span>
             )}
 

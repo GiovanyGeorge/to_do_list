@@ -13,6 +13,7 @@ import {
   Sparkles,
   GripVertical,
   ListTree,
+  Bell,
 } from "lucide-react";
 import { useTaskStore } from "@/store/useTaskStore";
 import { useSoundManager } from "@/hooks/useSoundManager";
@@ -42,7 +43,9 @@ export const DashboardPage: React.FC = () => {
   const [isAddFormOpen, setIsAddFormOpen] = useState(false);
   const [newTitle, setNewTitle] = useState("");
   const [newPriority, setNewPriority] = useState<Priority>("medium");
-  const [newTime, setNewTime] = useState("09:00 AM");
+  const [newTime, setNewTime] = useState("19:00");
+  const [newReminder, setNewReminder] = useState<"none" | "at_time" | "5m" | "15m" | "30m" | "1h" | "custom">("15m");
+  const [newCustomReminder, setNewCustomReminder] = useState("");
 
   // Calendar State
   const [calendarDate, setCalendarDate] = useState(new Date());
@@ -120,12 +123,46 @@ export const DashboardPage: React.FC = () => {
     e.preventDefault();
     if (!newTitle.trim()) return;
 
+    // Parse Due Time (HH:MM)
+    const timeParts = newTime.includes(":") ? newTime.split(":") : ["19", "00"];
+    const hours = parseInt(timeParts[0], 10) || 0;
+    const minutes = parseInt(timeParts[1], 10) || 0;
+
+    const dueDateTime = new Date(`${todayStr}T00:00:00`);
+    dueDateTime.setHours(hours, minutes, 0, 0);
+    const dueAtISO = !isNaN(dueDateTime.getTime()) ? dueDateTime.toISOString() : `${todayStr}T19:00:00Z`;
+
+    // Compute Reminder Time
+    let reminderAtISO: string | undefined = undefined;
+    if (newReminder === "at_time") {
+      reminderAtISO = dueAtISO;
+    } else if (newReminder === "5m" && !isNaN(dueDateTime.getTime())) {
+      reminderAtISO = new Date(dueDateTime.getTime() - 5 * 60 * 1000).toISOString();
+    } else if (newReminder === "15m" && !isNaN(dueDateTime.getTime())) {
+      reminderAtISO = new Date(dueDateTime.getTime() - 15 * 60 * 1000).toISOString();
+    } else if (newReminder === "30m" && !isNaN(dueDateTime.getTime())) {
+      reminderAtISO = new Date(dueDateTime.getTime() - 30 * 60 * 1000).toISOString();
+    } else if (newReminder === "1h" && !isNaN(dueDateTime.getTime())) {
+      reminderAtISO = new Date(dueDateTime.getTime() - 60 * 60 * 1000).toISOString();
+    } else if (newReminder === "custom" && newCustomReminder) {
+      const cParts = newCustomReminder.split(":");
+      const cHours = parseInt(cParts[0], 10) || 0;
+      const cMinutes = parseInt(cParts[1], 10) || 0;
+      const cDate = new Date(`${todayStr}T00:00:00`);
+      cDate.setHours(cHours, cMinutes, 0, 0);
+      if (!isNaN(cDate.getTime())) {
+        reminderAtISO = cDate.toISOString();
+      }
+    }
+
     await createTask({
       title: newTitle.trim(),
       priority: newPriority,
       status: "todo",
-      start_at: `${todayStr}T09:00:00Z`,
-      due_at: `${todayStr}T17:00:00Z`,
+      start_at: `${todayStr}T00:00:00Z`,
+      due_at: dueAtISO,
+      reminder_at: reminderAtISO,
+      plan_date: todayStr,
     });
 
     setNewTitle("");
@@ -467,23 +504,62 @@ export const DashboardPage: React.FC = () => {
               transition={{ duration: 0.25 }}
               className="p-4 rounded-inner bg-[#F0EAE0] mb-3 overflow-hidden space-y-3"
             >
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  autoFocus
-                  placeholder="What needs to be done?"
-                  value={newTitle}
-                  onChange={(e) => setNewTitle(e.target.value)}
-                  className="flex-1 px-3.5 py-2 rounded-xl bg-white text-sm text-[#1C1917] placeholder-[#78716C] border border-[rgba(28,25,23,0.12)] focus:outline-none focus:border-[#C2410C] focus:ring-1 focus:ring-[#C2410C]"
-                />
-                <input
-                  type="text"
-                  placeholder="09:00 AM"
-                  value={newTime}
-                  onChange={(e) => setNewTime(e.target.value)}
-                  className="w-24 px-2.5 py-2 rounded-xl bg-white text-xs text-[#1C1917] border border-[rgba(28,25,23,0.12)] focus:outline-none focus:border-[#C2410C] font-mono"
-                />
+              <input
+                type="text"
+                autoFocus
+                placeholder="What needs to be done?"
+                value={newTitle}
+                onChange={(e) => setNewTitle(e.target.value)}
+                className="w-full px-3.5 py-2 rounded-xl bg-white text-sm text-[#1C1917] placeholder-[#78716C] border border-[rgba(28,25,23,0.12)] focus:outline-none focus:border-[#C2410C] focus:ring-1 focus:ring-[#C2410C]"
+              />
+
+              {/* Time & Reminder Row */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+                {/* Due Time */}
+                <div className="flex items-center gap-2 bg-white px-3 py-1.5 rounded-xl border border-[rgba(28,25,23,0.12)]">
+                  <Clock className="w-3.5 h-3.5 text-[#78716C] shrink-0" />
+                  <span className="text-[#78716C] shrink-0 font-medium">Time:</span>
+                  <input
+                    type="time"
+                    value={newTime}
+                    onChange={(e) => setNewTime(e.target.value)}
+                    className="flex-1 bg-transparent text-[#1C1917] font-mono focus:outline-none text-xs"
+                  />
+                </div>
+
+                {/* Reminder selector */}
+                <div className="flex items-center gap-2 bg-white px-3 py-1.5 rounded-xl border border-[rgba(28,25,23,0.12)]">
+                  <Bell className="w-3.5 h-3.5 text-[#C2410C] shrink-0" />
+                  <span className="text-[#78716C] shrink-0 font-medium">Remind at:</span>
+                  <select
+                    value={newReminder}
+                    onChange={(e) => setNewReminder(e.target.value as any)}
+                    className="flex-1 bg-transparent text-[#1C1917] focus:outline-none text-xs cursor-pointer"
+                  >
+                    <option value="none">No reminder</option>
+                    <option value="at_time">At task time ({newTime})</option>
+                    <option value="5m">5 mins before</option>
+                    <option value="15m">15 mins before</option>
+                    <option value="30m">30 mins before</option>
+                    <option value="1h">1 hour before</option>
+                    <option value="custom">Custom time...</option>
+                  </select>
+                </div>
               </div>
+
+              {/* Custom reminder time input if selected */}
+              {newReminder === "custom" && (
+                <div className="flex items-center gap-2 bg-white px-3 py-1.5 rounded-xl border border-[rgba(28,25,23,0.12)] text-xs">
+                  <Bell className="w-3.5 h-3.5 text-[#C2410C] shrink-0" />
+                  <span className="text-[#78716C] font-medium shrink-0">Custom Remind Time:</span>
+                  <input
+                    type="time"
+                    value={newCustomReminder}
+                    onChange={(e) => setNewCustomReminder(e.target.value)}
+                    className="flex-1 bg-transparent text-[#1C1917] font-mono focus:outline-none text-xs"
+                  />
+                </div>
+              )}
 
               <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
                 {/* Priority Selection Pills */}
@@ -550,10 +626,20 @@ export const DashboardPage: React.FC = () => {
                     ? "bg-[#C2410C]"
                     : "bg-[#15803D]";
 
-                let timeFormatted = "09:00 AM";
+                let timeFormatted = "";
                 if (task.due_at) {
                   try {
                     timeFormatted = new Date(task.due_at).toLocaleTimeString([], {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    });
+                  } catch {}
+                }
+
+                let reminderFormatted = "";
+                if (task.reminder_at) {
+                  try {
+                    reminderFormatted = new Date(task.reminder_at).toLocaleTimeString([], {
                       hour: "2-digit",
                       minute: "2-digit",
                     });
@@ -620,12 +706,27 @@ export const DashboardPage: React.FC = () => {
                           )}
                         </div>
 
-                        {/* Right metadata: Time, Delete button, Priority dot */}
-                        <div className="flex items-center gap-2.5 shrink-0 ml-3">
-                          <div className="flex items-center gap-1 text-xs text-[#78716C] font-mono">
-                            <Clock className="w-3 h-3" />
-                            <span>{timeFormatted}</span>
-                          </div>
+                        {/* Right metadata: Time, Reminder, Delete button, Priority dot */}
+                        <div className="flex items-center gap-2 shrink-0 ml-3">
+                          {timeFormatted && (
+                            <div
+                              className="flex items-center gap-1 text-xs text-[#78716C] font-mono bg-white/70 px-2 py-0.5 rounded-md border border-[rgba(28,25,23,0.08)]"
+                              title={`Due Time: ${timeFormatted}`}
+                            >
+                              <Clock className="w-3 h-3 text-[#78716C]" />
+                              <span>{timeFormatted}</span>
+                            </div>
+                          )}
+
+                          {reminderFormatted && (
+                            <div
+                              className="flex items-center gap-1 text-xs font-mono text-[#C2410C] bg-[#FFFBEB] px-2 py-0.5 rounded-md border border-[rgba(194,65,12,0.2)]"
+                              title={`Remind at ${reminderFormatted}`}
+                            >
+                              <Bell className="w-3 h-3 text-[#C2410C]" />
+                              <span className="font-medium whitespace-nowrap">Remind at {reminderFormatted}</span>
+                            </div>
+                          )}
 
                           {/* Delete hover icon */}
                           <button

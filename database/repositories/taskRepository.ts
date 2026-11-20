@@ -45,6 +45,11 @@ export class TaskRepository {
       VALUES (?, ?, ?, 0, ?)
     `);
 
+    const insertReminder = this.db.prepare(`
+      INSERT INTO reminders (id, task_id, remind_at, type, title, message, status, created_at)
+      VALUES (?, ?, ?, 'task_reminder', ?, ?, 'pending', ?)
+    `);
+
     const transaction = this.db.transaction(() => {
       insertTask.run(
         id,
@@ -75,6 +80,17 @@ export class TaskRepository {
 
       if (input.plan_date) {
         insertDayPlan.run(crypto.randomUUID(), id, input.plan_date, now);
+      }
+
+      if (input.reminder_at) {
+        insertReminder.run(
+          crypto.randomUUID(),
+          id,
+          input.reminder_at,
+          input.title,
+          input.description || null,
+          now
+        );
       }
     });
 
@@ -132,6 +148,13 @@ export class TaskRepository {
       blockedCount = res.count;
     }
 
+    // Pending reminder if any
+    const reminderRow = this.db
+      .prepare(
+        "SELECT remind_at FROM reminders WHERE task_id = ? AND status = 'pending' ORDER BY remind_at ASC LIMIT 1"
+      )
+      .get(id) as { remind_at: string } | undefined;
+
     return {
       ...task,
       subtasks,
@@ -139,6 +162,7 @@ export class TaskRepository {
       category,
       blocking_tasks: blockingIds,
       blocked_by_incomplete_count: blockedCount,
+      reminder_at: reminderRow?.remind_at || null,
     };
   }
 
@@ -256,6 +280,29 @@ export class TaskRepository {
 
     params.push(id);
     this.db.prepare(`UPDATE tasks SET ${sets.join(", ")} WHERE id = ?`).run(...params);
+
+    if (input.reminder_at !== undefined) {
+      this.db
+        .prepare("DELETE FROM reminders WHERE task_id = ? AND status = 'pending'")
+        .run(id);
+
+      if (input.reminder_at) {
+        this.db
+          .prepare(`
+            INSERT INTO reminders (id, task_id, remind_at, type, title, message, status, created_at)
+            VALUES (?, ?, ?, 'task_reminder', ?, ?, 'pending', ?)
+          `)
+          .run(
+            crypto.randomUUID(),
+            id,
+            input.reminder_at,
+            input.title ?? existing.title,
+            input.description !== undefined ? input.description : existing.description,
+            new Date().toISOString()
+          );
+      }
+    }
+
     return this.getById(id);
   }
 

@@ -13,6 +13,8 @@ import {
   X,
   GripVertical,
   Check,
+  Clock,
+  Bell,
 } from "lucide-react";
 import { Reorder } from "motion/react";
 import type { Priority, TaskStatus } from "@shared/types/database";
@@ -40,6 +42,9 @@ export const TaskDetailsModal: React.FC = () => {
   const [priority, setPriority] = useState<Priority>("medium");
   const [categoryId, setCategoryId] = useState<string>("");
   const [dueDate, setDueDate] = useState("");
+  const [dueTime, setDueTime] = useState("19:00");
+  const [reminderPreset, setReminderPreset] = useState<"none" | "at_due" | "5m" | "15m" | "30m" | "1h" | "1d" | "custom">("none");
+  const [customReminder, setCustomReminder] = useState("");
   const [planDate, setPlanDate] = useState("");
   const [recurrence, setRecurrence] = useState("");
   const [newSubtaskTitle, setNewSubtaskTitle] = useState("");
@@ -55,24 +60,87 @@ export const TaskDetailsModal: React.FC = () => {
       setStatus(task.status);
       setPriority(task.priority);
       setCategoryId(task.category_id || "");
-      setDueDate(task.due_at ? task.due_at.substring(0, 10) : "");
       setPlanDate(task.start_at ? task.start_at.substring(0, 10) : "");
       setRecurrence(task.recurrence_rule || "");
+
+      if (task.due_at) {
+        setDueDate(task.due_at.substring(0, 10));
+        try {
+          const d = new Date(task.due_at);
+          const hh = String(d.getHours()).padStart(2, "0");
+          const mm = String(d.getMinutes()).padStart(2, "0");
+          setDueTime(`${hh}:${mm}`);
+        } catch {
+          setDueTime("19:00");
+        }
+      } else {
+        setDueDate("");
+        setDueTime("19:00");
+      }
+
+      if (task.reminder_at) {
+        setReminderPreset("custom");
+        try {
+          const rDate = new Date(task.reminder_at);
+          const yr = rDate.getFullYear();
+          const mo = String(rDate.getMonth() + 1).padStart(2, "0");
+          const da = String(rDate.getDate()).padStart(2, "0");
+          const hh = String(rDate.getHours()).padStart(2, "0");
+          const mm = String(rDate.getMinutes()).padStart(2, "0");
+          setCustomReminder(`${yr}-${mo}-${da}T${hh}:${mm}`);
+        } catch {
+          setCustomReminder("");
+        }
+      } else {
+        setReminderPreset("none");
+        setCustomReminder("");
+      }
     }
   }, [task]);
 
   if (!task) return null;
 
   const handleSave = () => {
+    // Calculate due_at
+    let dueAtISO: string | null = null;
+    if (dueDate) {
+      const [hh, mm] = dueTime.includes(":") ? dueTime.split(":") : ["19", "00"];
+      const d = new Date(`${dueDate}T00:00:00`);
+      d.setHours(parseInt(hh, 10) || 0, parseInt(mm, 10) || 0, 0, 0);
+      dueAtISO = !isNaN(d.getTime()) ? d.toISOString() : new Date(dueDate).toISOString();
+    }
+
+    // Calculate reminder_at
+    let reminderAtISO: string | null = null;
+    if (reminderPreset === "at_due" && dueAtISO) {
+      reminderAtISO = dueAtISO;
+    } else if (reminderPreset === "5m" && dueAtISO) {
+      reminderAtISO = new Date(new Date(dueAtISO).getTime() - 5 * 60 * 1000).toISOString();
+    } else if (reminderPreset === "15m" && dueAtISO) {
+      reminderAtISO = new Date(new Date(dueAtISO).getTime() - 15 * 60 * 1000).toISOString();
+    } else if (reminderPreset === "30m" && dueAtISO) {
+      reminderAtISO = new Date(new Date(dueAtISO).getTime() - 30 * 60 * 1000).toISOString();
+    } else if (reminderPreset === "1h" && dueAtISO) {
+      reminderAtISO = new Date(new Date(dueAtISO).getTime() - 60 * 60 * 1000).toISOString();
+    } else if (reminderPreset === "1d" && dueAtISO) {
+      reminderAtISO = new Date(new Date(dueAtISO).getTime() - 24 * 60 * 60 * 1000).toISOString();
+    } else if (reminderPreset === "custom" && customReminder) {
+      const cDate = new Date(customReminder);
+      if (!isNaN(cDate.getTime())) {
+        reminderAtISO = cDate.toISOString();
+      }
+    }
+
     updateTask(task.id, {
       title: title.trim() || task.title,
       description: description.trim() || null,
       status,
       priority,
       category_id: categoryId || null,
-      due_at: dueDate ? new Date(dueDate).toISOString() : null,
-      start_at: planDate ? new Date(planDate).toISOString() : null,
+      due_at: dueAtISO,
+      start_at: planDate ? new Date(`${planDate}T00:00:00`).toISOString() : null,
       recurrence_rule: recurrence || null,
+      reminder_at: reminderAtISO,
     });
     setSelectedTaskId(null);
   };
@@ -178,6 +246,16 @@ export const TaskDetailsModal: React.FC = () => {
             leftIcon={<Calendar className="w-4 h-4" />}
           />
 
+          <Input
+            label="Due Time"
+            type="time"
+            value={dueTime}
+            onChange={(e) => setDueTime(e.target.value)}
+            leftIcon={<Clock className="w-4 h-4 text-text-muted" />}
+          />
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <Select
             label="Recurrence"
             value={recurrence}
@@ -190,7 +268,33 @@ export const TaskDetailsModal: React.FC = () => {
               { value: "yearly", label: "Yearly" },
             ]}
           />
+
+          <Select
+            label="Remind at"
+            value={reminderPreset}
+            onChange={(e) => setReminderPreset(e.target.value as any)}
+            options={[
+              { value: "none", label: "No reminder" },
+              { value: "at_due", label: "At due time" },
+              { value: "5m", label: "5 minutes before" },
+              { value: "15m", label: "15 minutes before" },
+              { value: "30m", label: "30 minutes before" },
+              { value: "1h", label: "1 hour before" },
+              { value: "1d", label: "1 day before" },
+              { value: "custom", label: "Custom date & time..." },
+            ]}
+          />
         </div>
+
+        {reminderPreset === "custom" && (
+          <Input
+            label="Custom Reminder Date & Time"
+            type="datetime-local"
+            value={customReminder}
+            onChange={(e) => setCustomReminder(e.target.value)}
+            leftIcon={<Bell className="w-4 h-4 text-accent" />}
+          />
+        )}
 
         <Textarea
           label="Description / Notes"
