@@ -206,7 +206,7 @@ export interface HabitWithStats extends HabitRecord {
   longest_streak: number;
   total_completions: number;
   is_completed_today: boolean;
-  recent_logs: string[]; // dates of logs in past 7 days
+  recent_logs: string[];
 }
 
 // Goals Types
@@ -256,4 +256,37 @@ export interface NoteRecord {
 
 export interface NoteWithTags extends NoteRecord {
   tags: TagRecord[];
+}
+
+// Analytics Types
+export interface DailyTrendPoint {
+  date: string;
+  completed_count: number;
+  created_count: number;
+}
+
+export interface PriorityDistributionItem {
+  priority: Priority;
+  count: number;
+}
+
+export interface ProjectAnalyticsItem {
+  id: string;
+  name: string;
+  color: string;
+  progress_percent: number;
+  completed_tasks: number;
+  total_tasks: number;
+}
+
+export interface AnalyticsSummary {
+  tasks_completed_count: number;
+  tasks_created_count: number;
+  completion_rate: number;
+  active_projects_count: number;
+  habits_count: number;
+  average_habit_consistency: number;
+  daily_trends: DailyTrendPoint[];
+  priority_distribution: PriorityDistributionItem[];
+  project_progress: ProjectAnalyticsItem[];
 }

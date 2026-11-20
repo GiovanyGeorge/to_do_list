@@ -14,6 +14,7 @@ import type {
   GoalWithDetails,
   GoalMilestoneRecord,
   NoteWithTags,
+  AnalyticsSummary,
 } from "./database";
 
 export interface AppInfo {
@@ -119,6 +120,9 @@ export interface ElectronAPI {
     input: { title?: string; content?: string; color?: string }
   ) => Promise<NoteWithTags | null>;
   deleteNote: (id: string) => Promise<boolean>;
+
+  // Analytics API
+  getAnalyticsSummary: (startDate: string, endDate: string) => Promise<AnalyticsSummary>;
 }
 
 declare global {

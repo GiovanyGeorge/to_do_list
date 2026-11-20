@@ -18,6 +18,8 @@ import { GoalRepository } from "../database/repositories/goalRepository";
 import { registerGoalIpc } from "./ipc/goalIpc";
 import { NoteRepository } from "../database/repositories/noteRepository";
 import { registerNoteIpc } from "./ipc/noteIpc";
+import { AnalyticsRepository } from "../database/repositories/analyticsRepository";
+import { registerAnalyticsIpc } from "./ipc/analyticsIpc";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -55,6 +57,9 @@ registerGoalIpc(goalRepo);
 
 const noteRepo = new NoteRepository(db);
 registerNoteIpc(noteRepo);
+
+const analyticsRepo = new AnalyticsRepository(db);
+registerAnalyticsIpc(analyticsRepo);
 
 function createWindow() {
   mainWindow = new BrowserWindow({

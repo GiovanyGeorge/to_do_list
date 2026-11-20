@@ -129,6 +129,10 @@ const api: ElectronAPI = {
     input: { title?: string; content?: string; color?: string }
   ) => ipcRenderer.invoke("notes:update", id, input),
   deleteNote: (id: string) => ipcRenderer.invoke("notes:delete", id),
+
+  // Analytics methods
+  getAnalyticsSummary: (startDate: string, endDate: string) =>
+    ipcRenderer.invoke("analytics:get-summary", startDate, endDate),
 };
 
 contextBridge.exposeInMainWorld("electronAPI", api);
