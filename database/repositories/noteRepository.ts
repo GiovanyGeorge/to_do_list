@@ -1,9 +1,9 @@
-import Database from "better-sqlite3";
+import Database from "../sqlite";
 import crypto from "node:crypto";
 import type { NoteRecord, NoteWithTags, TagRecord } from "../../shared/types/database";
 
 export class NoteRepository {
-  constructor(private db: Database.Database) {}
+  constructor(private db: Database) {}
 
   create(input: {
     title: string;
@@ -48,18 +48,18 @@ export class NoteRepository {
 
   getById(id: string): NoteWithTags | null {
     const note = this.db
-      .prepare<[string], NoteRecord>("SELECT * FROM notes WHERE id = ?")
-      .get(id);
+      .prepare("SELECT * FROM notes WHERE id = ?")
+      .get(id) as NoteRecord | undefined;
 
     if (!note) return null;
 
     const tags = this.db
-      .prepare<[string], TagRecord>(`
+      .prepare(`
         SELECT t.* FROM tags t
         INNER JOIN note_tags nt ON nt.tag_id = t.id
         WHERE nt.note_id = ?
       `)
-      .all(id);
+      .all(id) as TagRecord[];
 
     return { ...note, tags };
   }

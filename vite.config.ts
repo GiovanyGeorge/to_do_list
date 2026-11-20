@@ -10,6 +10,10 @@ export default defineConfig({
     electron([
       {
         entry: "electron/main.ts",
+        onstart(options) {
+          delete process.env.ELECTRON_RUN_AS_NODE;
+          options.startup();
+        },
       },
       {
         entry: "electron/preload.ts",

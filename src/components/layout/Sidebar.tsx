@@ -3,23 +3,23 @@ import { NavLink, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { motion, AnimatePresence } from "motion/react";
 import {
-  LayoutDashboard,
+  LayoutGrid,
   Sun,
-  Inbox,
-  CheckSquare,
-  FolderKanban,
   Calendar,
+  CheckCircle2,
+  FolderKanban,
   Sparkles,
   Target,
   FileText,
   BarChart3,
   Archive,
-  LayoutGrid,
   Settings,
   ChevronLeft,
   ChevronRight,
+  CheckCheck,
 } from "lucide-react";
 import { useAppStore } from "@/store/useAppStore";
+import { useTaskStore } from "@/store/useTaskStore";
 import { useMotion } from "@/hooks/useMotion";
 import { useSoundManager } from "@/hooks/useSoundManager";
 import clsx from "clsx";
@@ -27,24 +27,32 @@ import clsx from "clsx";
 export const Sidebar: React.FC = () => {
   const { t, i18n } = useTranslation();
   const { sidebarCollapsed, toggleSidebar } = useAppStore();
+  const { tasks } = useTaskStore();
   const isRtl = i18n.dir() === "rtl";
   const location = useLocation();
   const { enabled } = useMotion();
   const { playSound } = useSoundManager();
 
-  const navigation = [
-    { name: t("nav.dashboard"), href: "/", icon: LayoutDashboard },
-    { name: t("nav.myDay"), href: "/my-day", icon: Sun },
-    { name: t("nav.inbox"), href: "/inbox", icon: Inbox },
-    { name: t("nav.allTasks"), href: "/tasks", icon: CheckSquare },
-    { name: t("nav.projects"), href: "/projects", icon: FolderKanban },
-    { name: t("nav.calendar"), href: "/calendar", icon: Calendar },
-    { name: t("nav.habits"), href: "/habits", icon: Sparkles },
-    { name: t("nav.goals"), href: "/goals", icon: Target },
-    { name: t("nav.notes"), href: "/notes", icon: FileText },
-    { name: t("nav.analytics"), href: "/analytics", icon: BarChart3 },
-    { name: t("nav.archive"), href: "/archive", icon: Archive },
-    { name: t("nav.widgets"), href: "/widgets", icon: LayoutGrid },
+  // Priority counts for open (not done) tasks
+  const openTasks = tasks.filter((t) => t.status !== "done");
+  const highCount = openTasks.filter((t) => t.priority === "high" || t.priority === "urgent").length;
+  const mediumCount = openTasks.filter((t) => t.priority === "medium").length;
+  const lowCount = openTasks.filter((t) => t.priority === "low").length;
+
+  const primaryNavigation = [
+    { name: t("nav.dashboard") || "Dashboard", href: "/", icon: LayoutGrid },
+    { name: t("nav.today") || "Today", href: "/my-day", icon: Sun },
+    { name: t("nav.upcoming") || "Upcoming", href: "/calendar", icon: Calendar },
+    { name: t("nav.completed") || "Completed", href: "/tasks", icon: CheckCircle2 },
+  ];
+
+  const secondaryNavigation = [
+    { name: t("nav.projects") || "Projects", href: "/projects", icon: FolderKanban },
+    { name: t("nav.habits") || "Habits", href: "/habits", icon: Sparkles },
+    { name: t("nav.goals") || "Goals", href: "/goals", icon: Target },
+    { name: t("nav.notes") || "Notes", href: "/notes", icon: FileText },
+    { name: t("nav.analytics") || "Analytics", href: "/analytics", icon: BarChart3 },
+    { name: t("nav.archive") || "Archive", href: "/archive", icon: Archive },
   ];
 
   const isActive = (href: string) =>
@@ -54,31 +62,32 @@ export const Sidebar: React.FC = () => {
 
   return (
     <motion.aside
-      animate={{ width: sidebarCollapsed ? 80 : 256 }}
-      transition={enabled ? { duration: 0.28, ease: [0.16, 1, 0.3, 1] } : { duration: 0 }}
-      className="flex flex-col border-r border-border-subtle bg-background-sidebar relative overflow-hidden"
+      animate={{ width: sidebarCollapsed ? 76 : 240 }}
+      transition={enabled ? { duration: 0.28, ease: [0.2, 0.8, 0.2, 1] } : { duration: 0 }}
+      className="flex flex-col border-r border-[rgba(28,25,23,0.08)] bg-[#FAF7F2] relative overflow-hidden select-none shrink-0"
       style={{ willChange: "width" }}
     >
-      {/* Brand Header */}
-      <div className="flex items-center h-16 px-4 border-b border-border-subtle titlebar-drag-region">
+      {/* 1. Logo & Brand Tile */}
+      <div className="flex items-center h-16 px-5 border-b border-[rgba(28,25,23,0.06)] titlebar-drag-region">
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg bg-accent flex items-center justify-center text-background font-bold text-lg shadow-sm shrink-0">
-            LF
+          {/* 36px gradient tile with double check icon */}
+          <div className="w-9 h-9 rounded-xl bg-accent-gradient flex items-center justify-center text-[#FFFBEB] shadow-glow shrink-0">
+            <CheckCheck className="w-5 h-5 stroke-[2.5]" />
           </div>
           <AnimatePresence mode="wait">
             {!sidebarCollapsed && (
               <motion.div
-                className="flex flex-col overflow-hidden whitespace-nowrap"
+                className="flex items-baseline overflow-hidden whitespace-nowrap font-sora"
                 initial={{ opacity: 0, width: 0 }}
                 animate={{ opacity: 1, width: "auto" }}
                 exit={{ opacity: 0, width: 0 }}
-                transition={enabled ? { duration: 0.22 } : { duration: 0 }}
+                transition={enabled ? { duration: 0.2 } : { duration: 0 }}
               >
-                <span className="font-semibold text-text-primary tracking-wide text-sm">
-                  {t("app.title")}
+                <span className="font-bold text-[#1C1917] tracking-tight text-lg">
+                  Life
                 </span>
-                <span className="text-[10px] text-text-secondary leading-tight truncate max-w-[140px]">
-                  {t("app.subtitle")}
+                <span className="font-bold text-accent-gradient tracking-tight text-lg">
+                  Flow
                 </span>
               </motion.div>
             )}
@@ -86,9 +95,9 @@ export const Sidebar: React.FC = () => {
         </div>
       </div>
 
-      {/* Navigation links */}
-      <div className="flex-1 overflow-y-auto py-4 px-2 space-y-1">
-        {navigation.map((item) => {
+      {/* 2. Main Navigation List */}
+      <div className="flex-1 overflow-y-auto py-5 px-3 space-y-1">
+        {primaryNavigation.map((item) => {
           const active = isActive(item.href);
           return (
             <NavLink
@@ -97,37 +106,22 @@ export const Sidebar: React.FC = () => {
               title={sidebarCollapsed ? item.name : undefined}
               onClick={() => playSound("navigation")}
               className={clsx(
-                "relative flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors",
+                "relative flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all group",
                 active
-                  ? "text-accent font-semibold"
-                  : "text-text-secondary hover:text-text-primary hover:bg-background-elevated/50",
+                  ? "bg-accent-gradient text-[#FFFBEB] font-semibold shadow-glow"
+                  : "text-[#78716C] hover:text-[#1C1917] hover:bg-[#F0EAE0]",
                 sidebarCollapsed && "justify-center px-0"
               )}
             >
-              {/* Animated active indicator */}
-              {active && (
-                <motion.div
-                  layoutId={enabled ? "nav-active-indicator" : undefined}
-                  className="absolute inset-0 rounded-lg bg-accent/15"
-                  transition={enabled ? { type: "spring", stiffness: 350, damping: 30 } : { duration: 0 }}
-                />
-              )}
-              <motion.div
-                className="relative z-10 shrink-0"
-                whileHover={enabled ? { scale: 1.1 } : undefined}
-                whileTap={enabled ? { scale: 0.95 } : undefined}
-                transition={{ duration: 0.15 }}
-              >
-                <item.icon className="w-5 h-5" />
-              </motion.div>
+              <item.icon className="w-4 h-4 shrink-0 transition-transform group-hover:scale-105" />
               <AnimatePresence mode="wait">
                 {!sidebarCollapsed && (
                   <motion.span
-                    className="relative z-10 whitespace-nowrap"
+                    className="whitespace-nowrap font-sans text-sm"
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
-                    transition={{ duration: 0.14 }}
+                    transition={{ duration: 0.15 }}
                   >
                     {item.name}
                   </motion.span>
@@ -136,51 +130,117 @@ export const Sidebar: React.FC = () => {
             </NavLink>
           );
         })}
+
+        {/* Priority Counts Card (when expanded) */}
+        <AnimatePresence>
+          {!sidebarCollapsed && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              className="pt-4 pb-2"
+            >
+              <div className="px-3 py-3 rounded-2xl bg-[#FFFFFF] border border-[rgba(28,25,23,0.08)] shadow-soft-card">
+                <span className="text-[11px] font-semibold text-[#78716C] uppercase tracking-wider block mb-2.5 px-1 font-sora">
+                  Open by priority
+                </span>
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between px-2.5 py-1.5 rounded-lg bg-[#FAF7F2] text-xs font-medium text-[#1C1917]">
+                    <div className="flex items-center gap-2">
+                      <span className="w-2 h-2 rounded-full bg-[#B91C1C]" />
+                      <span>High</span>
+                    </div>
+                    <span className="font-sora font-semibold text-[11px] text-[#78716C] tabular-nums">
+                      {highCount}
+                    </span>
+                  </div>
+
+                  <div className="flex items-center justify-between px-2.5 py-1.5 rounded-lg bg-[#FAF7F2] text-xs font-medium text-[#1C1917]">
+                    <div className="flex items-center gap-2">
+                      <span className="w-2 h-2 rounded-full bg-[#C2410C]" />
+                      <span>Medium</span>
+                    </div>
+                    <span className="font-sora font-semibold text-[11px] text-[#78716C] tabular-nums">
+                      {mediumCount}
+                    </span>
+                  </div>
+
+                  <div className="flex items-center justify-between px-2.5 py-1.5 rounded-lg bg-[#FAF7F2] text-xs font-medium text-[#1C1917]">
+                    <div className="flex items-center gap-2">
+                      <span className="w-2 h-2 rounded-full bg-[#15803D]" />
+                      <span>Low</span>
+                    </div>
+                    <span className="font-sora font-semibold text-[11px] text-[#78716C] tabular-nums">
+                      {lowCount}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Secondary Modules Divider */}
+        {!sidebarCollapsed && (
+          <div className="pt-2 pb-1 px-3">
+            <span className="text-[10px] font-semibold text-[#A8A29E] uppercase tracking-wider font-sora">
+              More
+            </span>
+          </div>
+        )}
+
+        {/* Secondary Navigation */}
+        <div className="space-y-0.5">
+          {secondaryNavigation.map((item) => {
+            const active = isActive(item.href);
+            return (
+              <NavLink
+                key={item.href}
+                to={item.href}
+                title={sidebarCollapsed ? item.name : undefined}
+                onClick={() => playSound("navigation")}
+                className={clsx(
+                  "flex items-center gap-3 px-3.5 py-2 rounded-xl text-xs font-medium transition-all group",
+                  active
+                    ? "bg-[#F0EAE0] text-[#C2410C] font-semibold"
+                    : "text-[#78716C] hover:text-[#1C1917] hover:bg-[#F0EAE0]/70",
+                  sidebarCollapsed && "justify-center px-0"
+                )}
+              >
+                <item.icon className="w-4 h-4 shrink-0 transition-transform group-hover:scale-105" />
+                {!sidebarCollapsed && (
+                  <span className="truncate">{item.name}</span>
+                )}
+              </NavLink>
+            );
+          })}
+        </div>
       </div>
 
-      {/* Footer controls & Settings */}
-      <div className="p-3 border-t border-border-subtle flex flex-col gap-2">
+      {/* 3. Footer Settings & Collapse */}
+      <div className="p-3 border-t border-[rgba(28,25,23,0.06)] flex flex-col gap-1.5">
         <NavLink
           to="/settings"
-          title={sidebarCollapsed ? t("nav.settings") : undefined}
+          title={sidebarCollapsed ? t("nav.settings") || "Settings" : undefined}
           onClick={() => playSound("navigation")}
           className={({ isActive: active }) =>
             clsx(
-              "relative flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors",
+              "flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-medium transition-colors",
               active
-                ? "text-accent font-semibold"
-                : "text-text-secondary hover:text-text-primary hover:bg-background-elevated/50",
+                ? "bg-[#F0EAE0] text-[#C2410C] font-semibold"
+                : "text-[#78716C] hover:text-[#1C1917] hover:bg-[#F0EAE0]",
               sidebarCollapsed && "justify-center px-0"
             )
           }
         >
-          {location.pathname === "/settings" && (
-            <motion.div
-              layoutId={enabled ? "nav-active-indicator" : undefined}
-              className="absolute inset-0 rounded-lg bg-accent/15"
-              transition={enabled ? { type: "spring", stiffness: 350, damping: 30 } : { duration: 0 }}
-            />
-          )}
-          <Settings className="w-5 h-5 shrink-0 relative z-10" />
-          <AnimatePresence mode="wait">
-            {!sidebarCollapsed && (
-              <motion.span
-                className="relative z-10 whitespace-nowrap"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.14 }}
-              >
-                {t("nav.settings")}
-              </motion.span>
-            )}
-          </AnimatePresence>
+          <Settings className="w-4 h-4 shrink-0" />
+          {!sidebarCollapsed && <span>{t("nav.settings") || "Settings"}</span>}
         </NavLink>
 
         <button
           onClick={toggleSidebar}
           aria-label={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
-          className="flex items-center justify-center p-2 rounded-lg text-text-secondary hover:text-text-primary hover:bg-background-elevated/50 transition-colors w-full"
+          className="flex items-center justify-center p-2 rounded-xl text-[#78716C] hover:text-[#1C1917] hover:bg-[#F0EAE0] transition-colors w-full"
         >
           {sidebarCollapsed ? (
             isRtl ? <ChevronLeft className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />

@@ -1,8 +1,8 @@
-import Database from "better-sqlite3";
+import Database from "../../database/sqlite";
 import type { TaskRecord, ProjectRecord, NoteRecord } from "../../shared/types/database";
 
 export class ExportService {
-  constructor(private db: Database.Database) {}
+  constructor(private db: Database) {}
 
   exportTasksCSV(): string {
     const rows = this.db

@@ -4,19 +4,20 @@
 
 @layer base {
   :root {
-    --color-bg-main: #111318;
-    --color-bg-sidebar: #151920;
-    --color-bg-card: #191D24;
-    --color-bg-elevated: #252B35;
-    --color-accent: #E99A43;
-    --color-text-primary: #F3F4F6;
-    --color-text-secondary: #9299A5;
+    --color-bg-main: #FAF7F2;
+    --color-bg-sidebar: #FAF7F2;
+    --color-bg-card: #FFFFFF;
+    --color-bg-elevated: #F0EAE0;
+    --color-accent: #C2410C;
+    --color-accent-glow: #E2622A;
+    --color-text-primary: #1C1917;
+    --color-text-secondary: #78716C;
   }
 
   body {
     background-color: var(--color-bg-main);
     color: var(--color-text-primary);
-    font-family: 'Inter', system-ui, sans-serif;
+    font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
   }
 
   [dir="rtl"] body {
@@ -35,12 +36,12 @@
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #2A303C;
+  background: #E5DFD7;
   border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #374151;
+  background: #D5CECE;
 }
 
 /* Electron window drag helpers */
@@ -52,31 +53,31 @@
   -webkit-app-region: no-drag;
 }
 
-/* Sonner toast overrides for LifeFlow dark theme */
+/* Gradients and utility styles */
+.bg-accent-gradient {
+  background: linear-gradient(100deg, #E2622A, #C2410C);
+}
+
+.text-accent-gradient {
+  background: linear-gradient(100deg, #E2622A, #C2410C);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.shadow-soft-card {
+  box-shadow: 0 1px 2px rgba(28,25,23,.05), 0 14px 30px -20px rgba(28,25,23,.24);
+}
+
+.shadow-terracotta-glow {
+  box-shadow: 0 10px 26px -10px rgba(194,65,12,.45);
+}
+
+/* Sonner toast overrides for LifeFlow Paper-like warm theme */
 [data-sonner-toaster] [data-sonner-toast] {
-  --normal-bg: #191D24;
-  --normal-border: #2A303C;
-  --normal-text: #F3F4F6;
-  font-family: 'Inter', system-ui, sans-serif;
-}
-
-[dir="rtl"] [data-sonner-toaster] [data-sonner-toast] {
-  font-family: 'Cairo', system-ui, sans-serif;
-}
-
-/* Range input styling for volume slider */
-input[type="range"]::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  width: 14px;
-  height: 14px;
-  border-radius: 50%;
-  background: #E99A43;
-  cursor: pointer;
-  border: 2px solid #191D24;
-}
-
-input[type="range"]::-webkit-slider-runnable-track {
-  height: 6px;
-  border-radius: 3px;
-  background: #252B35;
+  --normal-bg: #FFFFFF;
+  --normal-border: rgba(28, 25, 23, 0.12);
+  --normal-text: #1C1917;
+  font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+  box-shadow: 0 14px 30px -20px rgba(28,25,23,.24);
+  border-radius: 16px;
 }

@@ -1,10 +1,6 @@
-import type DatabaseType from "better-sqlite3";
-import { createRequire } from "node:module";
+import Database from "../../database/sqlite";
 import fs from "node:fs";
 import path from "node:path";
-
-const require = createRequire(import.meta.url);
-const Database = require("better-sqlite3") as typeof DatabaseType;
 
 export interface BackupMetadata {
   filename: string;
@@ -16,7 +12,7 @@ export interface BackupMetadata {
 
 export class BackupService {
   constructor(
-    private db: DatabaseType.Database,
+    private db: Database,
     private dbPath: string,
     private backupsDir: string
   ) {
@@ -36,7 +32,7 @@ export class BackupService {
 
     const filepath = path.join(targetDir, filename);
 
-    // Use SQLite's safe atomic backup API
+    // Use VACUUM INTO for a consistent snapshot backup
     await this.db.backup(filepath);
 
     // Verify backup integrity
@@ -111,10 +107,9 @@ export class BackupService {
     // 2. Create safety recovery point of current active database
     await this.createBackup("pre_restore");
 
-    // 3. Restore backup data into active database using sqlite backup
-    const sourceDb = new Database(filepath, { readonly: true });
-    await sourceDb.backup(this.dbPath);
-    sourceDb.close();
+    // 3. Restore backup by copying the file over the active database
+    // Close any handles, copy the backup file, then re-init
+    fs.copyFileSync(filepath, this.dbPath);
 
     return {
       success: true,

@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
-import Database from "better-sqlite3";
+import Database from "../database/sqlite";
 import fs from "node:fs";
 import path from "node:path";
 import os from "node:os";
@@ -12,7 +12,7 @@ import { HabitRepository } from "../database/repositories/habitRepository";
 import { NoteRepository } from "../database/repositories/noteRepository";
 
 describe("Phase 9 - Backup, Restore, Export & Archive Engine", () => {
-  let db: Database.Database;
+  let db: Database;
   let tempDir: string;
   let dbPath: string;
   let backupsDir: string;

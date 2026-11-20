@@ -1,4 +1,4 @@
-import Database from "better-sqlite3";
+import Database from "../sqlite";
 import type {
   AnalyticsSummary,
   DailyTrendPoint,
@@ -8,12 +8,12 @@ import type {
 } from "../../shared/types/database";
 
 export class AnalyticsRepository {
-  constructor(private db: Database.Database) {}
+  constructor(private db: Database) {}
 
   getSummary(startDate: string, endDate: string): AnalyticsSummary {
     // 1. Task metrics in date range
     const completedRes = this.db
-      .prepare<[string, string], { count: number }>(`
+      .prepare(`
         SELECT COUNT(*) as count FROM tasks
         WHERE status = 'done' 
           AND completed_at IS NOT NULL
@@ -21,16 +21,16 @@ export class AnalyticsRepository {
           AND date(completed_at) <= date(?)
           AND deleted_at IS NULL
       `)
-      .get(startDate, endDate);
+      .get(startDate, endDate) as { count: number } | undefined;
 
     const createdRes = this.db
-      .prepare<[string, string], { count: number }>(`
+      .prepare(`
         SELECT COUNT(*) as count FROM tasks
         WHERE date(created_at) >= date(?)
           AND date(created_at) <= date(?)
           AND deleted_at IS NULL
       `)
-      .get(startDate, endDate);
+      .get(startDate, endDate) as { count: number } | undefined;
 
     const tasks_completed_count = completedRes?.count || 0;
     const tasks_created_count = createdRes?.count || 0;
@@ -43,11 +43,11 @@ export class AnalyticsRepository {
 
     // 2. Active Projects
     const projectsRes = this.db
-      .prepare<[], { count: number }>(`
+      .prepare(`
         SELECT COUNT(*) as count FROM projects
         WHERE status = 'active' AND deleted_at IS NULL AND archived_at IS NULL
       `)
-      .get();
+      .get() as { count: number } | undefined;
     const active_projects_count = projectsRes?.count || 0;
 
     // Project progress breakdown
@@ -86,18 +86,18 @@ export class AnalyticsRepository {
 
     // 3. Habits consistency
     const habitsRes = this.db
-      .prepare<[], { count: number }>(`
+      .prepare(`
         SELECT COUNT(*) as count FROM habits WHERE status = 'active'
       `)
-      .get();
+      .get() as { count: number } | undefined;
     const habits_count = habitsRes?.count || 0;
 
     const habitLogsRes = this.db
-      .prepare<[string, string], { count: number }>(`
+      .prepare(`
         SELECT COUNT(*) as count FROM habit_logs
         WHERE log_date >= date(?) AND log_date <= date(?)
       `)
-      .get(startDate, endDate);
+      .get(startDate, endDate) as { count: number } | undefined;
 
     // Days in range
     const startNum = Math.floor(Date.parse(`${startDate}T00:00:00Z`) / 86400000);
@@ -115,7 +115,7 @@ export class AnalyticsRepository {
 
     // 4. Daily trends
     const dailyCompletedRows = this.db
-      .prepare<[string, string], { d: string; count: number }>(`
+      .prepare(`
         SELECT date(completed_at) as d, COUNT(*) as count FROM tasks
         WHERE status = 'done' 
           AND completed_at IS NOT NULL
@@ -124,17 +124,17 @@ export class AnalyticsRepository {
           AND deleted_at IS NULL
         GROUP BY date(completed_at)
       `)
-      .all(startDate, endDate);
+      .all(startDate, endDate) as { d: string; count: number }[];
 
     const dailyCreatedRows = this.db
-      .prepare<[string, string], { d: string; count: number }>(`
+      .prepare(`
         SELECT date(created_at) as d, COUNT(*) as count FROM tasks
         WHERE date(created_at) >= date(?)
           AND date(created_at) <= date(?)
           AND deleted_at IS NULL
         GROUP BY date(created_at)
       `)
-      .all(startDate, endDate);
+      .all(startDate, endDate) as { d: string; count: number }[];
 
     const completedMap = new Map(dailyCompletedRows.map((r) => [r.d, r.count]));
     const createdMap = new Map(dailyCreatedRows.map((r) => [r.d, r.count]));
@@ -152,12 +152,12 @@ export class AnalyticsRepository {
 
     // 5. Priority distribution
     const priorityRows = this.db
-      .prepare<[], { priority: Priority; count: number }>(`
+      .prepare(`
         SELECT priority, COUNT(*) as count FROM tasks
         WHERE deleted_at IS NULL AND archived_at IS NULL
         GROUP BY priority
       `)
-      .all();
+      .all() as { priority: string; count: number }[];
 
     const priorityMap = new Map(priorityRows.map((r) => [r.priority, r.count]));
     const priorities: Priority[] = ["urgent", "high", "medium", "low"];

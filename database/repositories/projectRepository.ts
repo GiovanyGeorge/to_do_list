@@ -1,4 +1,4 @@
-import Database from "better-sqlite3";
+import Database from "../sqlite";
 import crypto from "node:crypto";
 import type {
   ProjectRecord,
@@ -8,7 +8,7 @@ import type {
 } from "../../shared/types/database";
 
 export class ProjectRepository {
-  constructor(private db: Database.Database) {}
+  constructor(private db: Database) {}
 
   create(input: CreateProjectInput): ProjectWithStats {
     const id = crypto.randomUUID();
@@ -39,20 +39,20 @@ export class ProjectRepository {
 
   getById(id: string): ProjectWithStats | null {
     const project = this.db
-      .prepare<[string], ProjectRecord>("SELECT * FROM projects WHERE id = ?")
-      .get(id);
+      .prepare("SELECT * FROM projects WHERE id = ?")
+      .get(id) as ProjectRecord | undefined;
 
     if (!project) return null;
 
     const stats = this.db
-      .prepare<[string], { total: number; completed: number }>(`
+      .prepare(`
         SELECT 
           COUNT(*) as total,
           SUM(CASE WHEN status = 'done' THEN 1 ELSE 0 END) as completed
         FROM tasks 
         WHERE project_id = ? AND deleted_at IS NULL
       `)
-      .get(id);
+      .get(id) as { total: number; completed: number | null } | undefined;
 
     const task_count = stats?.total || 0;
     const completed_task_count = stats?.completed || 0;

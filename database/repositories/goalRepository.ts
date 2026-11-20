@@ -1,4 +1,4 @@
-import Database from "better-sqlite3";
+import Database from "../sqlite";
 import crypto from "node:crypto";
 import type {
   GoalRecord,
@@ -6,8 +6,10 @@ import type {
   GoalMilestoneRecord,
 } from "../../shared/types/database";
 
+// GoalRecord used for type casts below
+
 export class GoalRepository {
-  constructor(private db: Database.Database) {}
+  constructor(private db: Database) {}
 
   create(input: {
     title: string;
@@ -57,16 +59,16 @@ export class GoalRepository {
 
   getById(id: string): GoalWithDetails | null {
     const goal = this.db
-      .prepare<[string], GoalRecord>("SELECT * FROM goals WHERE id = ?")
-      .get(id);
+      .prepare("SELECT * FROM goals WHERE id = ?")
+      .get(id) as GoalRecord | undefined;
 
     if (!goal) return null;
 
     const milestones = this.db
-      .prepare<[string], GoalMilestoneRecord>(
+      .prepare(
         "SELECT * FROM goal_milestones WHERE goal_id = ? ORDER BY position ASC, created_at ASC"
       )
-      .all(id);
+      .all(id) as GoalMilestoneRecord[];
 
     const total = milestones.length;
     const completed = milestones.filter((m) => m.completed === 1).length;
@@ -94,10 +96,10 @@ export class GoalRepository {
 
   toggleMilestone(milestoneId: string): boolean {
     const ms = this.db
-      .prepare<[string], GoalMilestoneRecord>(
+      .prepare(
         "SELECT * FROM goal_milestones WHERE id = ?"
       )
-      .get(milestoneId);
+      .get(milestoneId) as GoalMilestoneRecord | undefined;
 
     if (!ms) return false;
 
@@ -113,10 +115,10 @@ export class GoalRepository {
     const id = crypto.randomUUID();
     const now = new Date().toISOString();
     const countRes = this.db
-      .prepare<[string], { count: number }>(
+      .prepare(
         "SELECT COUNT(*) as count FROM goal_milestones WHERE goal_id = ?"
       )
-      .get(goalId);
+      .get(goalId) as { count: number } | undefined;
     const position = countRes?.count || 0;
 
     this.db
@@ -126,10 +128,10 @@ export class GoalRepository {
       .run(id, goalId, title, position, now, now);
 
     return this.db
-      .prepare<[string], GoalMilestoneRecord>(
+      .prepare(
         "SELECT * FROM goal_milestones WHERE id = ?"
       )
-      .get(id)!;
+      .get(id) as GoalMilestoneRecord;
   }
 
   delete(id: string): boolean {

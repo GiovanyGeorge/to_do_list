@@ -1,4 +1,4 @@
-import Database from "better-sqlite3";
+import Database from "./sqlite";
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -6,7 +6,7 @@ import { fileURLToPath } from "node:url";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-export function runMigrations(db: Database.Database): void {
+export function runMigrations(db: Database): void {
   // Ensure _migrations table exists
   db.exec(`
     CREATE TABLE IF NOT EXISTS _migrations (

@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
-import Database from "better-sqlite3";
+import Database from "../database/sqlite";
 import fs from "node:fs";
 import path from "node:path";
 import { ProjectRepository } from "../database/repositories/projectRepository";
@@ -8,7 +8,7 @@ import { TaskRepository } from "../database/repositories/taskRepository";
 import { TaskService } from "../electron/services/taskService";
 
 describe("Phase 4 - Projects and Calendar Engine", () => {
-  let db: Database.Database;
+  let db: Database;
   let projectRepo: ProjectRepository;
   let projectService: ProjectService;
   let taskRepo: TaskRepository;

@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
-import Database from "better-sqlite3";
+import Database from "../database/sqlite";
 import fs from "node:fs";
 import path from "node:path";
 import { HabitRepository } from "../database/repositories/habitRepository";
@@ -7,7 +7,7 @@ import { GoalRepository } from "../database/repositories/goalRepository";
 import { NoteRepository } from "../database/repositories/noteRepository";
 
 describe("Phase 6 - Habits, Goals, and Notes Engine", () => {
-  let db: Database.Database;
+  let db: Database;
   let habitRepo: HabitRepository;
   let goalRepo: GoalRepository;
   let noteRepo: NoteRepository;

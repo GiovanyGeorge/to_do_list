@@ -1,4 +1,4 @@
-import Database from "better-sqlite3";
+import Database from "../sqlite";
 import crypto from "node:crypto";
 import type {
   ReminderRecord,
@@ -8,7 +8,7 @@ import type {
 } from "../../shared/types/database";
 
 export class ReminderRepository {
-  constructor(private db: Database.Database) {}
+  constructor(private db: Database) {}
 
   create(input: {
     taskId?: string;
@@ -42,26 +42,26 @@ export class ReminderRepository {
   getById(id: string): ReminderRecord | null {
     return (
       this.db
-        .prepare<[string], ReminderRecord>("SELECT * FROM reminders WHERE id = ?")
-        .get(id) || null
+        .prepare("SELECT * FROM reminders WHERE id = ?")
+        .get(id) as ReminderRecord | undefined || null
     );
   }
 
   getPendingDueReminders(asOfTime: string): ReminderRecord[] {
     return this.db
-      .prepare<[string], ReminderRecord>(
+      .prepare(
         "SELECT * FROM reminders WHERE status = 'pending' AND remind_at <= ? ORDER BY remind_at ASC"
       )
-      .all(asOfTime);
+      .all(asOfTime) as ReminderRecord[];
   }
 
   getUpcomingPendingReminders(): ReminderRecord[] {
     const now = new Date().toISOString();
     return this.db
-      .prepare<[string], ReminderRecord>(
+      .prepare(
         "SELECT * FROM reminders WHERE status = 'pending' AND remind_at > ? ORDER BY remind_at ASC"
       )
-      .all(now);
+      .all(now) as ReminderRecord[];
   }
 
   updateStatus(id: string, status: ReminderStatus): void {
@@ -96,18 +96,18 @@ export class ReminderRepository {
       );
 
     return this.db
-      .prepare<[string], NotificationLogRecord>(
+      .prepare(
         "SELECT * FROM notification_logs WHERE id = ?"
       )
-      .get(id)!;
+      .get(id) as NotificationLogRecord;
   }
 
   listNotifications(limit = 50): NotificationLogRecord[] {
     return this.db
-      .prepare<[number], NotificationLogRecord>(
+      .prepare(
         "SELECT * FROM notification_logs WHERE channel = 'in_app' ORDER BY delivered_at DESC LIMIT ?"
       )
-      .all(limit);
+      .all(limit) as NotificationLogRecord[];
   }
 
   clearNotifications(): void {
@@ -117,11 +117,11 @@ export class ReminderRepository {
   // Settings
   getSetting(key: string, defaultValue = ""): string {
     const row = this.db
-      .prepare<[string], { value: string }>(
+      .prepare(
         "SELECT value FROM app_settings WHERE key = ?"
       )
       .get(key);
-    return row ? row.value : defaultValue;
+    return row ? (row as { value: string }).value : defaultValue;
   }
 
   setSetting(key: string, value: string): void {

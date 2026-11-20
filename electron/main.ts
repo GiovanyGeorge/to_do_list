@@ -1,6 +1,22 @@
 import { app, BrowserWindow, ipcMain } from "electron";
 import path from "node:path";
+import fs from "node:fs";
 import { fileURLToPath } from "node:url";
+
+// Disable hardware acceleration fallback for maximum Windows desktop compatibility
+app.disableHardwareAcceleration();
+
+// Error logging helper
+process.on("uncaughtException", (err) => {
+  try {
+    fs.appendFileSync("lifeflow-error.log", `[${new Date().toISOString()}] Uncaught: ${err.stack || err}\n`);
+  } catch {}
+});
+process.on("unhandledRejection", (reason) => {
+  try {
+    fs.appendFileSync("lifeflow-error.log", `[${new Date().toISOString()}] Unhandled: ${reason}\n`);
+  } catch {}
+});
 import { initDatabase, closeDatabase, getDatabasePath } from "../database/connection";
 import { runMigrations } from "../database/migrator";
 import { TaskRepository } from "../database/repositories/taskRepository";
@@ -38,49 +54,51 @@ process.env.VITE_PUBLIC = process.env.VITE_DEV_SERVER_URL
   : RENDERER_DIST;
 
 let mainWindow: BrowserWindow | null = null;
+let notificationServiceInstance: NotificationService | null = null;
 
-// Initialize Database & Services
-const dbPath = getDatabasePath();
-const db = initDatabase();
-runMigrations(db);
+function initServices() {
+  const dbPath = getDatabasePath();
+  const db = initDatabase();
+  runMigrations(db);
 
-const taskRepo = new TaskRepository(db);
-const taskService = new TaskService(taskRepo);
-registerTaskIpc(taskService);
+  const taskRepo = new TaskRepository(db);
+  const taskService = new TaskService(taskRepo);
+  registerTaskIpc(taskService);
 
-const projectRepo = new ProjectRepository(db);
-const projectService = new ProjectService(projectRepo);
-registerProjectIpc(projectService);
+  const projectRepo = new ProjectRepository(db);
+  const projectService = new ProjectService(projectRepo);
+  registerProjectIpc(projectService);
 
-const reminderRepo = new ReminderRepository(db);
-const notificationService = new NotificationService(reminderRepo);
-registerNotificationIpc(notificationService);
+  const reminderRepo = new ReminderRepository(db);
+  notificationServiceInstance = new NotificationService(reminderRepo);
+  registerNotificationIpc(notificationServiceInstance);
 
-const habitRepo = new HabitRepository(db);
-registerHabitIpc(habitRepo);
+  const habitRepo = new HabitRepository(db);
+  registerHabitIpc(habitRepo);
 
-const goalRepo = new GoalRepository(db);
-registerGoalIpc(goalRepo);
+  const goalRepo = new GoalRepository(db);
+  registerGoalIpc(goalRepo);
 
-const noteRepo = new NoteRepository(db);
-registerNoteIpc(noteRepo);
+  const noteRepo = new NoteRepository(db);
+  registerNoteIpc(noteRepo);
 
-const analyticsRepo = new AnalyticsRepository(db);
-registerAnalyticsIpc(analyticsRepo);
+  const analyticsRepo = new AnalyticsRepository(db);
+  registerAnalyticsIpc(analyticsRepo);
 
-const widgetManager = new WidgetWindowManager(
-  path.join(__dirname, "preload.js"),
-  process.env.VITE_DEV_SERVER_URL,
-  RENDERER_DIST,
-  reminderRepo
-);
-registerWidgetIpc(widgetManager);
+  const widgetManager = new WidgetWindowManager(
+    path.join(__dirname, "preload.js"),
+    process.env.VITE_DEV_SERVER_URL,
+    RENDERER_DIST,
+    reminderRepo
+  );
+  registerWidgetIpc(widgetManager);
 
-const backupsDir = path.join(path.dirname(dbPath), "backups");
-const backupService = new BackupService(db, dbPath, backupsDir);
-const exportService = new ExportService(db);
-const archiveRepo = new ArchiveRepository(db);
-registerBackupExportIpc(backupService, exportService, archiveRepo);
+  const backupsDir = path.join(path.dirname(dbPath), "backups");
+  const backupService = new BackupService(db, dbPath, backupsDir);
+  const exportService = new ExportService(db);
+  const archiveRepo = new ArchiveRepository(db);
+  registerBackupExportIpc(backupService, exportService, archiveRepo);
+}
 
 function createWindow() {
   mainWindow = new BrowserWindow({
@@ -100,7 +118,7 @@ function createWindow() {
     },
   });
 
-  notificationService.setNotificationListener((notif) => {
+  notificationServiceInstance?.setNotificationListener((notif) => {
     mainWindow?.webContents.send("notifications:new", notif);
   });
 
@@ -150,8 +168,13 @@ ipcMain.handle("window:is-maximized", () => {
 });
 
 app.whenReady().then(() => {
-  createWindow();
-  notificationService.initializeScheduler();
+  try {
+    initServices();
+    createWindow();
+    notificationServiceInstance?.initializeScheduler();
+  } catch (err: unknown) {
+    fs.appendFileSync("lifeflow-error.log", `[${new Date().toISOString()}] whenReady error: ${(err as Error).stack || err}\n`);
+  }
 
   app.on("activate", () => {
     if (BrowserWindow.getAllWindows().length === 0) {

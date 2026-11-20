@@ -1,4 +1,4 @@
-import Database from "better-sqlite3";
+import Database from "../sqlite";
 
 export interface ArchivedItem {
   id: string;
@@ -8,47 +8,47 @@ export interface ArchivedItem {
 }
 
 export class ArchiveRepository {
-  constructor(private db: Database.Database) {}
+  constructor(private db: Database) {}
 
   listArchived(): ArchivedItem[] {
     const items: ArchivedItem[] = [];
 
     // Archived Tasks
     const tasks = this.db
-      .prepare<[], { id: string; title: string; archived_at: string }>(`
+      .prepare(`
         SELECT id, title, archived_at FROM tasks WHERE archived_at IS NOT NULL AND deleted_at IS NULL
       `)
-      .all();
+      .all() as { id: string; title: string; archived_at: string }[];
     tasks.forEach((t) =>
       items.push({ id: t.id, type: "task", title: t.title, archivedAt: t.archived_at })
     );
 
     // Archived Projects
     const projects = this.db
-      .prepare<[], { id: string; name: string; archived_at: string }>(`
+      .prepare(`
         SELECT id, name, archived_at FROM projects WHERE archived_at IS NOT NULL AND deleted_at IS NULL
       `)
-      .all();
+      .all() as { id: string; name: string; archived_at: string }[];
     projects.forEach((p) =>
       items.push({ id: p.id, type: "project", title: p.name, archivedAt: p.archived_at })
     );
 
     // Archived Habits
     const habits = this.db
-      .prepare<[], { id: string; name: string; archived_at: string }>(`
+      .prepare(`
         SELECT id, name, archived_at FROM habits WHERE archived_at IS NOT NULL
       `)
-      .all();
+      .all() as { id: string; name: string; archived_at: string }[];
     habits.forEach((h) =>
       items.push({ id: h.id, type: "habit", title: h.name, archivedAt: h.archived_at })
     );
 
     // Archived Notes
     const notes = this.db
-      .prepare<[], { id: string; title: string; archived_at: string }>(`
+      .prepare(`
         SELECT id, title, archived_at FROM notes WHERE archived_at IS NOT NULL
       `)
-      .all();
+      .all() as { id: string; title: string; archived_at: string }[];
     notes.forEach((n) =>
       items.push({ id: n.id, type: "note", title: n.title, archivedAt: n.archived_at })
     );

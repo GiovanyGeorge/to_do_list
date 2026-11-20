@@ -1,4 +1,4 @@
-import Database from "better-sqlite3";
+import Database from "../sqlite";
 import crypto from "node:crypto";
 import type {
   TaskRecord,
@@ -12,7 +12,7 @@ import type {
 } from "../../shared/types/database";
 
 export class TaskRepository {
-  constructor(private db: Database.Database) {}
+  constructor(private db: Database) {}
 
   create(input: CreateTaskInput): TaskWithDetails {
     const id = crypto.randomUUID();
@@ -84,39 +84,39 @@ export class TaskRepository {
 
   getById(id: string): TaskWithDetails | null {
     const task = this.db
-      .prepare<[string], TaskRecord>("SELECT * FROM tasks WHERE id = ?")
-      .get(id);
+      .prepare("SELECT * FROM tasks WHERE id = ?")
+      .get(id) as TaskRecord | undefined;
 
     if (!task) return null;
 
     const subtasks = this.db
-      .prepare<[string], SubtaskRecord>(
+      .prepare(
         "SELECT * FROM subtasks WHERE task_id = ? ORDER BY position ASC, created_at ASC"
       )
-      .all(id);
+      .all(id) as SubtaskRecord[];
 
     const tags = this.db
-      .prepare<[string], TagRecord>(
+      .prepare(
         `SELECT t.* FROM tags t 
          INNER JOIN task_tags tt ON tt.tag_id = t.id 
          WHERE tt.task_id = ?`
       )
-      .all(id);
+      .all(id) as TagRecord[];
 
     let category: CategoryRecord | null = null;
     if (task.category_id) {
       category =
         this.db
-          .prepare<[string], CategoryRecord>("SELECT * FROM categories WHERE id = ?")
-          .get(task.category_id) || null;
+          .prepare("SELECT * FROM categories WHERE id = ?")
+          .get(task.category_id) as CategoryRecord | undefined || null;
     }
 
     // Dependencies (blocking task IDs)
     const blocking = this.db
-      .prepare<[string], { depends_on_task_id: string }>(
+      .prepare(
         "SELECT depends_on_task_id FROM task_dependencies WHERE task_id = ?"
       )
-      .all(id);
+      .all(id) as { depends_on_task_id: string }[];
 
     const blockingIds = blocking.map((b) => b.depends_on_task_id);
 
@@ -269,10 +269,10 @@ export class TaskRepository {
     const id = crypto.randomUUID();
     const now = new Date().toISOString();
     const countRes = this.db
-      .prepare<[string], { count: number }>(
+      .prepare(
         "SELECT COUNT(*) as count FROM subtasks WHERE task_id = ?"
       )
-      .get(taskId);
+      .get(taskId) as { count: number } | undefined;
     const position = countRes?.count || 0;
 
     this.db
@@ -282,14 +282,14 @@ export class TaskRepository {
       .run(id, taskId, title, position, now, now);
 
     return this.db
-      .prepare<[string], SubtaskRecord>("SELECT * FROM subtasks WHERE id = ?")
-      .get(id)!;
+      .prepare("SELECT * FROM subtasks WHERE id = ?")
+      .get(id) as SubtaskRecord;
   }
 
   toggleSubtask(subtaskId: string, completed?: boolean): SubtaskRecord | null {
     const subtask = this.db
-      .prepare<[string], SubtaskRecord>("SELECT * FROM subtasks WHERE id = ?")
-      .get(subtaskId);
+      .prepare("SELECT * FROM subtasks WHERE id = ?")
+      .get(subtaskId) as SubtaskRecord | undefined;
 
     if (!subtask) return null;
 
@@ -301,8 +301,8 @@ export class TaskRepository {
       .run(newCompleted, new Date().toISOString(), subtaskId);
 
     return this.db
-      .prepare<[string], SubtaskRecord>("SELECT * FROM subtasks WHERE id = ?")
-      .get(subtaskId)!;
+      .prepare("SELECT * FROM subtasks WHERE id = ?")
+      .get(subtaskId) as SubtaskRecord;
   }
 
   deleteSubtask(subtaskId: string): boolean {
@@ -314,7 +314,7 @@ export class TaskRepository {
   toggleDayPlan(taskId: string, planDate: string): boolean {
     const existing = this.db
       .prepare("SELECT id FROM task_day_plans WHERE task_id = ? AND plan_date = ?")
-      .get(taskId, planDate);
+      .get(taskId, planDate) as { id: string } | undefined;
 
     if (existing) {
       this.db
@@ -350,10 +350,10 @@ export class TaskRepository {
 
   getDependencies(taskId: string): string[] {
     const rows = this.db
-      .prepare<[string], { depends_on_task_id: string }>(
+      .prepare(
         "SELECT depends_on_task_id FROM task_dependencies WHERE task_id = ?"
       )
-      .all(taskId);
+      .all(taskId) as { depends_on_task_id: string }[];
     return rows.map((r) => r.depends_on_task_id);
   }
 }

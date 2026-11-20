@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
-import Database from "better-sqlite3";
+import Database from "../database/sqlite";
 import fs from "node:fs";
 import path from "node:path";
 import { AnalyticsRepository } from "../database/repositories/analyticsRepository";
@@ -9,7 +9,7 @@ import { ProjectRepository } from "../database/repositories/projectRepository";
 import { HabitRepository } from "../database/repositories/habitRepository";
 
 describe("Phase 7 - Analytics Aggregation Engine", () => {
-  let db: Database.Database;
+  let db: Database;
   let analyticsRepo: AnalyticsRepository;
   let taskRepo: TaskRepository;
   let taskService: TaskService;

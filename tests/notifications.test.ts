@@ -1,12 +1,12 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
-import Database from "better-sqlite3";
+import Database from "../database/sqlite";
 import fs from "node:fs";
 import path from "node:path";
 import { ReminderRepository } from "../database/repositories/reminderRepository";
 import { NotificationService } from "../electron/services/notificationService";
 
 describe("Phase 5 - Reminders and Notifications", () => {
-  let db: Database.Database;
+  let db: Database;
   let reminderRepo: ReminderRepository;
   let notificationService: NotificationService;
 

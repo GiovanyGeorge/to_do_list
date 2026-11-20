@@ -1,4 +1,4 @@
-import Database from "better-sqlite3";
+import Database from "../sqlite";
 import crypto from "node:crypto";
 import type {
   HabitRecord,
@@ -7,7 +7,7 @@ import type {
 } from "../../shared/types/database";
 
 export class HabitRepository {
-  constructor(private db: Database.Database) {}
+  constructor(private db: Database) {}
 
   create(input: {
     name: string;
@@ -45,16 +45,16 @@ export class HabitRepository {
 
   getById(id: string): HabitWithStats | null {
     const habit = this.db
-      .prepare<[string], HabitRecord>("SELECT * FROM habits WHERE id = ?")
-      .get(id);
+      .prepare("SELECT * FROM habits WHERE id = ?")
+      .get(id) as HabitRecord | undefined;
 
     if (!habit) return null;
 
     const logs = this.db
-      .prepare<[string], { log_date: string }>(
+      .prepare(
         "SELECT log_date FROM habit_logs WHERE habit_id = ? ORDER BY log_date DESC"
       )
-      .all(id);
+      .all(id) as { log_date: string }[];
 
     const logDates = logs.map((l) => l.log_date);
     const todayStr = new Date().toISOString().substring(0, 10);
