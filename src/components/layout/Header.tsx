@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { Search, Plus, Bell, Minus, Square, Copy, X, Languages } from "lucide-react";
 import { setAppLanguage } from "@/locales/i18n";
 import { useAppStore } from "@/store/useAppStore";
+import { useNotificationStore } from "@/store/useNotificationStore";
 import { QuickAddModal } from "../tasks/QuickAddModal";
 import { CommandPalette } from "../search/CommandPalette";
 import { NotificationDrawer } from "../notifications/NotificationDrawer";
@@ -10,12 +11,14 @@ import { NotificationDrawer } from "../notifications/NotificationDrawer";
 export const Header: React.FC = () => {
   const { t, i18n } = useTranslation();
   const { setLanguage } = useAppStore();
+  const { notifications, fetchNotifications } = useNotificationStore();
   const [isMaximized, setIsMaximized] = useState(false);
   const [isQuickAddOpen, setIsQuickAddOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
 
   useEffect(() => {
+    fetchNotifications();
     if (window.electronAPI) {
       window.electronAPI.isMaximized().then(setIsMaximized);
       const unsubscribe = window.electronAPI.onWindowStateChange((maximized) => {
@@ -23,7 +26,7 @@ export const Header: React.FC = () => {
       });
       return unsubscribe;
     }
-  }, []);
+  }, [fetchNotifications]);
 
   // Global Keyboard Shortcuts
   useEffect(() => {
@@ -102,7 +105,9 @@ export const Header: React.FC = () => {
             title={t("header.notifications")}
           >
             <Bell className="w-4 h-4" />
-            <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-accent" />
+            {notifications.length > 0 && (
+              <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-accent" />
+            )}
           </button>
 
           <div className="w-px h-5 bg-border-subtle mx-1" />

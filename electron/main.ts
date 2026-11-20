@@ -9,6 +9,9 @@ import { registerTaskIpc } from "./ipc/taskIpc";
 import { ProjectRepository } from "../database/repositories/projectRepository";
 import { ProjectService } from "./services/projectService";
 import { registerProjectIpc } from "./ipc/projectIpc";
+import { ReminderRepository } from "../database/repositories/reminderRepository";
+import { NotificationService } from "./services/notificationService";
+import { registerNotificationIpc } from "./ipc/notificationIpc";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -34,6 +37,10 @@ const projectRepo = new ProjectRepository(db);
 const projectService = new ProjectService(projectRepo);
 registerProjectIpc(projectService);
 
+const reminderRepo = new ReminderRepository(db);
+const notificationService = new NotificationService(reminderRepo);
+registerNotificationIpc(notificationService);
+
 function createWindow() {
   mainWindow = new BrowserWindow({
     width: 1280,
@@ -50,6 +57,10 @@ function createWindow() {
       nodeIntegration: false,
       sandbox: false,
     },
+  });
+
+  notificationService.setNotificationListener((notif) => {
+    mainWindow?.webContents.send("notifications:new", notif);
   });
 
   mainWindow.on("maximize", () => {
@@ -99,6 +110,7 @@ ipcMain.handle("window:is-maximized", () => {
 
 app.whenReady().then(() => {
   createWindow();
+  notificationService.initializeScheduler();
 
   app.on("activate", () => {
     if (BrowserWindow.getAllWindows().length === 0) {

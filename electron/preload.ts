@@ -6,6 +6,8 @@ import type {
   TaskFilterParams,
   CreateProjectInput,
   UpdateProjectInput,
+  ReminderType,
+  NotificationLogRecord,
 } from "../shared/types/database";
 
 const api: ElectronAPI = {
@@ -49,6 +51,31 @@ const api: ElectronAPI = {
     ipcRenderer.invoke("projects:update", id, input),
   deleteProject: (id: string) => ipcRenderer.invoke("projects:delete", id),
   archiveProject: (id: string) => ipcRenderer.invoke("projects:archive", id),
+
+  // Notification & Reminder methods
+  listNotifications: (limit?: number) =>
+    ipcRenderer.invoke("notifications:list", limit),
+  clearNotifications: () => ipcRenderer.invoke("notifications:clear-all"),
+  createReminder: (input: {
+    taskId?: string;
+    remindAt: string;
+    title: string;
+    message?: string;
+    type?: ReminderType;
+  }) => ipcRenderer.invoke("reminders:create", input),
+  getSetting: (key: string, defaultValue?: string) =>
+    ipcRenderer.invoke("settings:get", key, defaultValue),
+  setSetting: (key: string, value: string) =>
+    ipcRenderer.invoke("settings:set", key, value),
+  onNotificationReceived: (callback: (notif: NotificationLogRecord) => void) => {
+    const handler = (_event: Electron.IpcRendererEvent, notif: NotificationLogRecord) => {
+      callback(notif);
+    };
+    ipcRenderer.on("notifications:new", handler);
+    return () => {
+      ipcRenderer.removeListener("notifications:new", handler);
+    };
+  },
 };
 
 contextBridge.exposeInMainWorld("electronAPI", api);

@@ -64,7 +64,7 @@ export interface SubtaskRecord {
   id: string;
   task_id: string;
   title: string;
-  completed: number; // 0 or 1
+  completed: number;
   position: number;
   created_at: string;
   updated_at: string;
@@ -88,7 +88,7 @@ export interface TagRecord {
 export interface TaskDayPlanRecord {
   id: string;
   task_id: string;
-  plan_date: string; // YYYY-MM-DD
+  plan_date: string;
   position: number;
   created_at: string;
 }
@@ -142,4 +142,35 @@ export interface TaskFilterParams {
   plan_date?: string;
   search?: string;
   include_archived?: boolean;
+}
+
+// Reminders & Notifications Types
+export type ReminderType = "task_reminder" | "deadline" | "overdue" | "daily_plan" | "custom";
+export type ReminderStatus = "pending" | "delivered" | "dismissed" | "failed";
+
+export interface ReminderRecord {
+  id: string;
+  task_id: string | null;
+  remind_at: string;
+  type: ReminderType;
+  title: string;
+  message: string | null;
+  status: ReminderStatus;
+  created_at: string;
+}
+
+export interface NotificationLogRecord {
+  id: string;
+  reminder_id: string | null;
+  channel: "in_app" | "native_windows";
+  title: string;
+  message: string | null;
+  status: "delivered" | "failed" | "skipped";
+  delivered_at: string;
+}
+
+export interface AppSettingRecord {
+  key: string;
+  value: string;
+  updated_at: string;
 }

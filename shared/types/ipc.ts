@@ -6,6 +6,9 @@ import type {
   ProjectWithStats,
   CreateProjectInput,
   UpdateProjectInput,
+  NotificationLogRecord,
+  ReminderRecord,
+  ReminderType,
 } from "./database";
 
 export interface AppInfo {
@@ -50,6 +53,20 @@ export interface ElectronAPI {
   ) => Promise<ProjectWithStats | null>;
   deleteProject: (id: string) => Promise<boolean>;
   archiveProject: (id: string) => Promise<ProjectWithStats | null>;
+
+  // Notification & Reminder API
+  listNotifications: (limit?: number) => Promise<NotificationLogRecord[]>;
+  clearNotifications: () => Promise<boolean>;
+  createReminder: (input: {
+    taskId?: string;
+    remindAt: string;
+    title: string;
+    message?: string;
+    type?: ReminderType;
+  }) => Promise<ReminderRecord>;
+  getSetting: (key: string, defaultValue?: string) => Promise<string>;
+  setSetting: (key: string, value: string) => Promise<boolean>;
+  onNotificationReceived?: (callback: (notif: NotificationLogRecord) => void) => () => void;
 }
 
 declare global {
