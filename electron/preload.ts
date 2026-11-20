@@ -41,6 +41,21 @@ const api: ElectronAPI = {
     ipcRenderer.invoke("tasks:add-dependency", taskId, dependsOnTaskId),
   removeDependency: (taskId: string, dependsOnTaskId: string) =>
     ipcRenderer.invoke("tasks:remove-dependency", taskId, dependsOnTaskId),
+  reorderTasks: (taskIds: string[]) => ipcRenderer.invoke("tasks:reorder", taskIds),
+  reorderSubtasks: (taskId: string, subtaskIds: string[]) =>
+    ipcRenderer.invoke("tasks:reorder-subtasks", taskId, subtaskIds),
+
+  // Category methods
+  listCategories: (includeArchived?: boolean) =>
+    ipcRenderer.invoke("categories:list", includeArchived),
+  getCategory: (id: string) => ipcRenderer.invoke("categories:get", id),
+  createCategory: (input) => ipcRenderer.invoke("categories:create", input),
+  updateCategory: (id: string, input) =>
+    ipcRenderer.invoke("categories:update", id, input),
+  archiveCategory: (id: string) => ipcRenderer.invoke("categories:archive", id),
+  unarchiveCategory: (id: string) => ipcRenderer.invoke("categories:unarchive", id),
+  deleteCategory: (id: string, reassignToCategoryId?: string | null) =>
+    ipcRenderer.invoke("categories:delete", id, reassignToCategoryId),
 
   // Project methods
   listProjects: (includeArchived?: boolean) =>

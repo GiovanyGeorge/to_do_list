@@ -3,6 +3,7 @@ import Database from "../database/sqlite";
 import fs from "node:fs";
 import path from "node:path";
 import os from "node:os";
+import { runMigrations } from "../database/migrator";
 import { BackupService } from "../electron/services/backupService";
 import { ExportService } from "../electron/services/exportService";
 import { ArchiveRepository } from "../database/repositories/archiveRepository";
@@ -32,13 +33,7 @@ describe("Phase 9 - Backup, Restore, Export & Archive Engine", () => {
     db = new Database(dbPath);
     db.pragma("foreign_keys = ON;");
 
-    const m1 = fs.readFileSync(path.join(__dirname, "../database/migrations/001_initial_schema.sql"), "utf-8");
-    const m2 = fs.readFileSync(path.join(__dirname, "../database/migrations/002_notifications.sql"), "utf-8");
-    const m3 = fs.readFileSync(path.join(__dirname, "../database/migrations/003_habits_goals_notes.sql"), "utf-8");
-
-    db.exec(m1);
-    db.exec(m2);
-    db.exec(m3);
+    runMigrations(db);
 
     backupService = new BackupService(db, dbPath, backupsDir);
     exportService = new ExportService(db);

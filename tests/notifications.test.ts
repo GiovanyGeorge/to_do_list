@@ -1,7 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import Database from "../database/sqlite";
-import fs from "node:fs";
-import path from "node:path";
+import { runMigrations } from "../database/migrator";
 import { ReminderRepository } from "../database/repositories/reminderRepository";
 import { NotificationService } from "../electron/services/notificationService";
 
@@ -14,17 +13,7 @@ describe("Phase 5 - Reminders and Notifications", () => {
     db = new Database(":memory:");
     db.pragma("foreign_keys = ON;");
 
-    // Run migrations 001 and 002
-    const migration1 = fs.readFileSync(
-      path.join(__dirname, "../database/migrations/001_initial_schema.sql"),
-      "utf-8"
-    );
-    const migration2 = fs.readFileSync(
-      path.join(__dirname, "../database/migrations/002_notifications.sql"),
-      "utf-8"
-    );
-    db.exec(migration1);
-    db.exec(migration2);
+    runMigrations(db);
 
     reminderRepo = new ReminderRepository(db);
     notificationService = new NotificationService(reminderRepo);

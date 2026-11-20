@@ -7,6 +7,7 @@ import {
   Sun,
   Calendar,
   CheckCircle2,
+  Folder,
   FolderKanban,
   Sparkles,
   Target,
@@ -47,6 +48,7 @@ export const Sidebar: React.FC = () => {
   ];
 
   const secondaryNavigation = [
+    { name: t("nav.categories") || "Categories", href: "/categories", icon: Folder },
     { name: t("nav.projects") || "Projects", href: "/projects", icon: FolderKanban },
     { name: t("nav.habits") || "Habits", href: "/habits", icon: Sparkles },
     { name: t("nav.goals") || "Goals", href: "/goals", icon: Target },

@@ -20,6 +20,8 @@ interface TaskStoreState {
   deleteTask: (id: string) => Promise<void>;
   toggleDayPlan: (taskId: string, planDate: string) => Promise<void>;
   setSelectedTaskId: (id: string | null) => void;
+  reorderTasks: (taskIds: string[]) => Promise<void>;
+  reorderSubtasks: (taskId: string, subtaskIds: string[]) => Promise<void>;
 }
 
 // In-memory fallback if Electron API is not available (e.g. during browser tests)
@@ -176,5 +178,52 @@ export const useTaskStore = create<TaskStoreState>((set) => ({
 
   setSelectedTaskId: (id: string | null) => {
     set({ selectedTaskId: id });
+  },
+
+  reorderTasks: async (taskIds: string[]) => {
+    set((state) => {
+      const taskMap = new Map(state.tasks.map((t) => [t.id, t]));
+      const reordered: typeof state.tasks = [];
+      taskIds.forEach((id) => {
+        const item = taskMap.get(id);
+        if (item) reordered.push(item);
+      });
+      state.tasks.forEach((t) => {
+        if (!taskIds.includes(t.id)) reordered.push(t);
+      });
+      fallbackTasks = reordered;
+      return { tasks: reordered };
+    });
+
+    try {
+      if (window.electronAPI?.reorderTasks) {
+        await window.electronAPI.reorderTasks(taskIds);
+      }
+    } catch (err: unknown) {
+      set({ error: (err as Error).message });
+    }
+  },
+
+  reorderSubtasks: async (taskId: string, subtaskIds: string[]) => {
+    set((state) => ({
+      tasks: state.tasks.map((task) => {
+        if (task.id !== taskId) return task;
+        const subMap = new Map(task.subtasks.map((s) => [s.id, s]));
+        const reorderedSubs: typeof task.subtasks = [];
+        subtaskIds.forEach((sid) => {
+          const s = subMap.get(sid);
+          if (s) reorderedSubs.push(s);
+        });
+        return { ...task, subtasks: reorderedSubs };
+      }),
+    }));
+
+    try {
+      if (window.electronAPI?.reorderSubtasks) {
+        await window.electronAPI.reorderSubtasks(taskId, subtaskIds);
+      }
+    } catch (err: unknown) {
+      set({ error: (err as Error).message });
+    }
   },
 }));

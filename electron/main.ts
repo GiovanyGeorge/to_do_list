@@ -42,6 +42,8 @@ import { BackupService } from "./services/backupService";
 import { ExportService } from "./services/exportService";
 import { ArchiveRepository } from "../database/repositories/archiveRepository";
 import { registerBackupExportIpc } from "./ipc/backupExportIpc";
+import { CategoryRepository } from "../database/repositories/categoryRepository";
+import { registerCategoryIpc } from "./ipc/categoryIpc";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -98,6 +100,9 @@ function initServices() {
   const exportService = new ExportService(db);
   const archiveRepo = new ArchiveRepository(db);
   registerBackupExportIpc(backupService, exportService, archiveRepo);
+
+  const categoryRepo = new CategoryRepository(db);
+  registerCategoryIpc(categoryRepo);
 }
 
 function createWindow() {

@@ -1,7 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import Database from "../database/sqlite";
-import fs from "node:fs";
-import path from "node:path";
+import { runMigrations } from "../database/migrator";
 import { ProjectRepository } from "../database/repositories/projectRepository";
 import { ProjectService } from "../electron/services/projectService";
 import { TaskRepository } from "../database/repositories/taskRepository";
@@ -18,11 +17,7 @@ describe("Phase 4 - Projects and Calendar Engine", () => {
     db = new Database(":memory:");
     db.pragma("foreign_keys = ON;");
 
-    const schemaSql = fs.readFileSync(
-      path.join(__dirname, "../database/migrations/001_initial_schema.sql"),
-      "utf-8"
-    );
-    db.exec(schemaSql);
+    runMigrations(db);
 
     projectRepo = new ProjectRepository(db);
     projectService = new ProjectService(projectRepo);

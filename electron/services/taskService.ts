@@ -145,4 +145,12 @@ export class TaskService {
       });
     }
   }
+
+  reorderTasks(taskIds: string[]): void {
+    this.repo.reorder(taskIds);
+  }
+
+  reorderSubtasks(taskId: string, subtaskIds: string[]): void {
+    this.repo.reorderSubtasks(taskId, subtaskIds);
+  }
 }

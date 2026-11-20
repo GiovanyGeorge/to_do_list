@@ -196,7 +196,7 @@ export class TaskRepository {
       params.push(`%${filters.search}%`, `%${filters.search}%`);
     }
 
-    sql += " ORDER BY t.created_at DESC";
+    sql += " ORDER BY t.position ASC, t.created_at DESC";
 
     const rows = this.db.prepare(sql).all(...params) as TaskRecord[];
     return rows.map((r) => this.getById(r.id)!);
@@ -355,5 +355,27 @@ export class TaskRepository {
       )
       .all(taskId) as { depends_on_task_id: string }[];
     return rows.map((r) => r.depends_on_task_id);
+  }
+
+  reorder(taskIds: string[]): void {
+    const stmt = this.db.prepare("UPDATE tasks SET position = ? WHERE id = ?");
+    const tx = this.db.transaction(() => {
+      taskIds.forEach((id, index) => {
+        stmt.run(index, id);
+      });
+    });
+    tx();
+  }
+
+  reorderSubtasks(taskId: string, subtaskIds: string[]): void {
+    const stmt = this.db.prepare(
+      "UPDATE subtasks SET position = ? WHERE id = ? AND task_id = ?"
+    );
+    const tx = this.db.transaction(() => {
+      subtaskIds.forEach((id, index) => {
+        stmt.run(index, id, taskId);
+      });
+    });
+    tx();
   }
 }

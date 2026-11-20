@@ -1,7 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import Database from "../database/sqlite";
-import fs from "node:fs";
-import path from "node:path";
+import { runMigrations } from "../database/migrator";
 import { TaskRepository } from "../database/repositories/taskRepository";
 import { TaskService } from "../electron/services/taskService";
 
@@ -15,12 +14,8 @@ describe("Phase 2 - Database and Core Task Engine", () => {
     db = new Database(":memory:");
     db.pragma("foreign_keys = ON;");
 
-    // Run schema
-    const schemaSql = fs.readFileSync(
-      path.join(__dirname, "../database/migrations/001_initial_schema.sql"),
-      "utf-8"
-    );
-    db.exec(schemaSql);
+    // Run all migrations
+    runMigrations(db);
 
     repo = new TaskRepository(db);
     service = new TaskService(repo);

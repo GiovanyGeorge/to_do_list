@@ -55,4 +55,17 @@ export function registerTaskIpc(taskService: TaskService): void {
       return { success: true };
     }
   );
+
+  ipcMain.handle("tasks:reorder", async (_event, taskIds: string[]) => {
+    taskService.reorderTasks(taskIds);
+    return { success: true };
+  });
+
+  ipcMain.handle(
+    "tasks:reorder-subtasks",
+    async (_event, taskId: string, subtaskIds: string[]) => {
+      taskService.reorderSubtasks(taskId, subtaskIds);
+      return { success: true };
+    }
+  );
 }

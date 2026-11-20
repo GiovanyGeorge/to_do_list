@@ -5,6 +5,7 @@ import { DashboardPage } from "@/pages/DashboardPage";
 import { MyDayPage } from "@/pages/MyDayPage";
 import { InboxPage } from "@/pages/InboxPage";
 import { AllTasksPage } from "@/pages/AllTasksPage";
+import { CategoriesPage } from "@/pages/CategoriesPage";
 import { ProjectsPage } from "@/pages/ProjectsPage";
 import { CalendarPage } from "@/pages/CalendarPage";
 import { HabitsPage } from "@/pages/HabitsPage";
@@ -67,6 +68,7 @@ export const App: React.FC = () => {
           <Route path="my-day" element={<MyDayPage />} />
           <Route path="inbox" element={<InboxPage />} />
           <Route path="tasks" element={<AllTasksPage />} />
+          <Route path="categories" element={<CategoriesPage />} />
           <Route path="projects" element={<ProjectsPage />} />
           <Route path="calendar" element={<CalendarPage />} />
           <Route path="habits" element={<HabitsPage />} />

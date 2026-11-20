@@ -1,7 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import Database from "../database/sqlite";
-import fs from "node:fs";
-import path from "node:path";
+import { runMigrations } from "../database/migrator";
 import { HabitRepository } from "../database/repositories/habitRepository";
 import { GoalRepository } from "../database/repositories/goalRepository";
 import { NoteRepository } from "../database/repositories/noteRepository";
@@ -16,13 +15,7 @@ describe("Phase 6 - Habits, Goals, and Notes Engine", () => {
     db = new Database(":memory:");
     db.pragma("foreign_keys = ON;");
 
-    const m1 = fs.readFileSync(path.join(__dirname, "../database/migrations/001_initial_schema.sql"), "utf-8");
-    const m2 = fs.readFileSync(path.join(__dirname, "../database/migrations/002_notifications.sql"), "utf-8");
-    const m3 = fs.readFileSync(path.join(__dirname, "../database/migrations/003_habits_goals_notes.sql"), "utf-8");
-
-    db.exec(m1);
-    db.exec(m2);
-    db.exec(m3);
+    runMigrations(db);
 
     habitRepo = new HabitRepository(db);
     goalRepo = new GoalRepository(db);

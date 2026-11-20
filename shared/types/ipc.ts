@@ -15,6 +15,10 @@ import type {
   GoalMilestoneRecord,
   NoteWithTags,
   AnalyticsSummary,
+  CategoryRecord,
+  CategoryWithStats,
+  CreateCategoryInput,
+  UpdateCategoryInput,
 } from "./database";
 import type { BackupMetadata } from "../../electron/services/backupService";
 import type { ArchivedItem } from "../../database/repositories/archiveRepository";
@@ -52,6 +56,26 @@ export interface ElectronAPI {
     taskId: string,
     dependsOnTaskId: string
   ) => Promise<{ success: boolean }>;
+  reorderTasks: (taskIds: string[]) => Promise<{ success: boolean }>;
+  reorderSubtasks: (
+    taskId: string,
+    subtaskIds: string[]
+  ) => Promise<{ success: boolean }>;
+
+  // Category API
+  listCategories: (includeArchived?: boolean) => Promise<CategoryWithStats[]>;
+  getCategory: (id: string) => Promise<CategoryRecord | null>;
+  createCategory: (input: CreateCategoryInput) => Promise<CategoryRecord>;
+  updateCategory: (
+    id: string,
+    input: UpdateCategoryInput
+  ) => Promise<CategoryRecord | null>;
+  archiveCategory: (id: string) => Promise<boolean>;
+  unarchiveCategory: (id: string) => Promise<boolean>;
+  deleteCategory: (
+    id: string,
+    reassignToCategoryId?: string | null
+  ) => Promise<boolean>;
 
   // Project API
   listProjects: (includeArchived?: boolean) => Promise<ProjectWithStats[]>;

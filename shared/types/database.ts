@@ -14,6 +14,7 @@ export interface ProjectRecord {
   updated_at: string;
   archived_at: string | null;
   deleted_at: string | null;
+  position?: number;
 }
 
 export interface ProjectWithStats extends ProjectRecord {
@@ -58,6 +59,7 @@ export interface TaskRecord {
   updated_at: string;
   archived_at: string | null;
   deleted_at: string | null;
+  position?: number;
 }
 
 export interface SubtaskRecord {
@@ -75,7 +77,29 @@ export interface CategoryRecord {
   name: string;
   color: string | null;
   icon: string | null;
+  description?: string | null;
   created_at: string;
+  archived_at?: string | null;
+}
+
+export interface CategoryWithStats extends CategoryRecord {
+  task_count: number;
+  completed_task_count: number;
+}
+
+export interface CreateCategoryInput {
+  name: string;
+  color?: string;
+  icon?: string;
+  description?: string;
+}
+
+export interface UpdateCategoryInput {
+  name?: string;
+  color?: string | null;
+  icon?: string | null;
+  description?: string | null;
+  archived_at?: string | null;
 }
 
 export interface TagRecord {
