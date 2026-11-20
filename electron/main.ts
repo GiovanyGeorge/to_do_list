@@ -6,6 +6,9 @@ import { runMigrations } from "../database/migrator";
 import { TaskRepository } from "../database/repositories/taskRepository";
 import { TaskService } from "./services/taskService";
 import { registerTaskIpc } from "./ipc/taskIpc";
+import { ProjectRepository } from "../database/repositories/projectRepository";
+import { ProjectService } from "./services/projectService";
+import { registerProjectIpc } from "./ipc/projectIpc";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -22,9 +25,14 @@ let mainWindow: BrowserWindow | null = null;
 // Initialize Database & Services
 const db = initDatabase();
 runMigrations(db);
+
 const taskRepo = new TaskRepository(db);
 const taskService = new TaskService(taskRepo);
 registerTaskIpc(taskService);
+
+const projectRepo = new ProjectRepository(db);
+const projectService = new ProjectService(projectRepo);
+registerProjectIpc(projectService);
 
 function createWindow() {
   mainWindow = new BrowserWindow({

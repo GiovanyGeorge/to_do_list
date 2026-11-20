@@ -3,6 +3,9 @@ import type {
   CreateTaskInput,
   UpdateTaskInput,
   TaskFilterParams,
+  ProjectWithStats,
+  CreateProjectInput,
+  UpdateProjectInput,
 } from "./database";
 
 export interface AppInfo {
@@ -36,6 +39,17 @@ export interface ElectronAPI {
     taskId: string,
     dependsOnTaskId: string
   ) => Promise<{ success: boolean }>;
+
+  // Project API
+  listProjects: (includeArchived?: boolean) => Promise<ProjectWithStats[]>;
+  getProject: (id: string) => Promise<ProjectWithStats | null>;
+  createProject: (input: CreateProjectInput) => Promise<ProjectWithStats>;
+  updateProject: (
+    id: string,
+    input: UpdateProjectInput
+  ) => Promise<ProjectWithStats | null>;
+  deleteProject: (id: string) => Promise<boolean>;
+  archiveProject: (id: string) => Promise<ProjectWithStats | null>;
 }
 
 declare global {

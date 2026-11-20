@@ -4,6 +4,8 @@ import type {
   CreateTaskInput,
   UpdateTaskInput,
   TaskFilterParams,
+  CreateProjectInput,
+  UpdateProjectInput,
 } from "../shared/types/database";
 
 const api: ElectronAPI = {
@@ -36,6 +38,17 @@ const api: ElectronAPI = {
     ipcRenderer.invoke("tasks:add-dependency", taskId, dependsOnTaskId),
   removeDependency: (taskId: string, dependsOnTaskId: string) =>
     ipcRenderer.invoke("tasks:remove-dependency", taskId, dependsOnTaskId),
+
+  // Project methods
+  listProjects: (includeArchived?: boolean) =>
+    ipcRenderer.invoke("projects:list", includeArchived),
+  getProject: (id: string) => ipcRenderer.invoke("projects:get", id),
+  createProject: (input: CreateProjectInput) =>
+    ipcRenderer.invoke("projects:create", input),
+  updateProject: (id: string, input: UpdateProjectInput) =>
+    ipcRenderer.invoke("projects:update", id, input),
+  deleteProject: (id: string) => ipcRenderer.invoke("projects:delete", id),
+  archiveProject: (id: string) => ipcRenderer.invoke("projects:archive", id),
 };
 
 contextBridge.exposeInMainWorld("electronAPI", api);

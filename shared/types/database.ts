@@ -1,5 +1,45 @@
 export type TaskStatus = "inbox" | "todo" | "in_progress" | "done" | "cancelled";
 export type Priority = "low" | "medium" | "high" | "urgent";
+export type ProjectStatus = "active" | "completed" | "on_hold" | "archived";
+
+export interface ProjectRecord {
+  id: string;
+  name: string;
+  description: string | null;
+  color: string | null;
+  status: ProjectStatus;
+  start_at: string | null;
+  due_at: string | null;
+  created_at: string;
+  updated_at: string;
+  archived_at: string | null;
+  deleted_at: string | null;
+}
+
+export interface ProjectWithStats extends ProjectRecord {
+  task_count: number;
+  completed_task_count: number;
+  progress_percent: number;
+}
+
+export interface CreateProjectInput {
+  name: string;
+  description?: string;
+  color?: string;
+  status?: ProjectStatus;
+  start_at?: string;
+  due_at?: string;
+}
+
+export interface UpdateProjectInput {
+  name?: string;
+  description?: string | null;
+  color?: string | null;
+  status?: ProjectStatus;
+  start_at?: string | null;
+  due_at?: string | null;
+  archived_at?: string | null;
+}
 
 export interface TaskRecord {
   id: string;
@@ -58,7 +98,7 @@ export interface TaskWithDetails extends TaskRecord {
   tags: TagRecord[];
   category?: CategoryRecord | null;
   is_in_my_day?: boolean;
-  blocking_tasks?: string[]; // IDs of tasks this task depends on
+  blocking_tasks?: string[];
   blocked_by_incomplete_count?: number;
 }
 
@@ -73,8 +113,8 @@ export interface CreateTaskInput {
   due_at?: string;
   recurrence_rule?: string;
   tag_ids?: string[];
-  subtasks?: string[]; // Subtask titles
-  plan_date?: string; // Add directly to My Day on a specific date
+  subtasks?: string[];
+  plan_date?: string;
 }
 
 export interface UpdateTaskInput {
@@ -96,8 +136,10 @@ export interface TaskFilterParams {
   priority?: Priority;
   project_id?: string;
   category_id?: string;
-  due_date?: string; // YYYY-MM-DD
-  plan_date?: string; // YYYY-MM-DD for My Day
+  due_date?: string;
+  start_date?: string;
+  end_date?: string;
+  plan_date?: string;
   search?: string;
   include_archived?: boolean;
 }

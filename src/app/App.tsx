@@ -5,9 +5,11 @@ import { DashboardPage } from "@/pages/DashboardPage";
 import { MyDayPage } from "@/pages/MyDayPage";
 import { InboxPage } from "@/pages/InboxPage";
 import { AllTasksPage } from "@/pages/AllTasksPage";
+import { ProjectsPage } from "@/pages/ProjectsPage";
+import { CalendarPage } from "@/pages/CalendarPage";
 import { TaskDetailsModal } from "@/components/tasks/TaskDetailsModal";
 
-// Placeholders for subsequent phases (Projects, Calendar, Habits, etc.)
+// Placeholders for subsequent phases (Habits, Goals, Notes, Analytics, etc.)
 const PlaceholderPage: React.FC<{ title: string }> = ({ title }) => (
   <div className="p-8 rounded-2xl bg-background-card border border-border-subtle text-center">
     <h2 className="text-xl font-bold text-text-primary mb-2">{title}</h2>
@@ -26,8 +28,8 @@ export const App: React.FC = () => {
           <Route path="my-day" element={<MyDayPage />} />
           <Route path="inbox" element={<InboxPage />} />
           <Route path="tasks" element={<AllTasksPage />} />
-          <Route path="projects" element={<PlaceholderPage title="Projects" />} />
-          <Route path="calendar" element={<PlaceholderPage title="Calendar" />} />
+          <Route path="projects" element={<ProjectsPage />} />
+          <Route path="calendar" element={<CalendarPage />} />
           <Route path="habits" element={<PlaceholderPage title="Habits" />} />
           <Route path="goals" element={<PlaceholderPage title="Goals" />} />
           <Route path="notes" element={<PlaceholderPage title="Notes" />} />
