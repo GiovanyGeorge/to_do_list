@@ -5,9 +5,13 @@
   },
   "nav": {
     "dashboard": "Dashboard",
+    "today": "Today",
+    "upcoming": "Upcoming",
+    "completed": "Completed",
     "myDay": "My Day",
     "inbox": "Inbox",
     "allTasks": "All Tasks",
+    "categories": "Categories",
     "projects": "Projects",
     "calendar": "Calendar",
     "habits": "Habits",

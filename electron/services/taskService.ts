@@ -153,4 +153,16 @@ export class TaskService {
   reorderSubtasks(taskId: string, subtaskIds: string[]): void {
     this.repo.reorderSubtasks(taskId, subtaskIds);
   }
+
+  addSubtask(taskId: string, title: string) {
+    return this.repo.addSubtask(taskId, title);
+  }
+
+  toggleSubtask(subtaskId: string, completed?: boolean) {
+    return this.repo.toggleSubtask(subtaskId, completed);
+  }
+
+  deleteSubtask(subtaskId: string): boolean {
+    return this.repo.deleteSubtask(subtaskId);
+  }
 }

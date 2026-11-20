@@ -5,9 +5,13 @@
   },
   "nav": {
     "dashboard": "لوحة التحكم",
+    "today": "اليوم",
+    "upcoming": "القادمة",
+    "completed": "المكتملة",
     "myDay": "يومي",
     "inbox": "صندوق الوارد",
     "allTasks": "جميع المهام",
+    "categories": "التصنيفات",
     "projects": "المشاريع",
     "calendar": "التقويم",
     "habits": "العادات",

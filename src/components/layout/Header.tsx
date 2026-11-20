@@ -83,6 +83,7 @@ export const Header: React.FC = () => {
     if (path === "/my-day") return "Today";
     if (path === "/calendar") return "Upcoming";
     if (path === "/tasks") return "All Tasks";
+    if (path === "/categories") return "Categories";
     if (path === "/projects") return "Projects";
     if (path === "/habits") return "Habits";
     if (path === "/goals") return "Goals";

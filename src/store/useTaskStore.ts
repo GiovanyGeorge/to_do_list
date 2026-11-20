@@ -22,6 +22,9 @@ interface TaskStoreState {
   setSelectedTaskId: (id: string | null) => void;
   reorderTasks: (taskIds: string[]) => Promise<void>;
   reorderSubtasks: (taskId: string, subtaskIds: string[]) => Promise<void>;
+  addSubtask: (taskId: string, title: string) => Promise<void>;
+  toggleSubtask: (taskId: string, subtaskId: string) => Promise<void>;
+  deleteSubtask: (taskId: string, subtaskId: string) => Promise<void>;
 }
 
 // In-memory fallback if Electron API is not available (e.g. during browser tests)
@@ -221,6 +224,79 @@ export const useTaskStore = create<TaskStoreState>((set) => ({
     try {
       if (window.electronAPI?.reorderSubtasks) {
         await window.electronAPI.reorderSubtasks(taskId, subtaskIds);
+      }
+    } catch (err: unknown) {
+      set({ error: (err as Error).message });
+    }
+  },
+
+  addSubtask: async (taskId: string, title: string) => {
+    try {
+      if (window.electronAPI?.addSubtask) {
+        const subtask = await window.electronAPI.addSubtask(taskId, title);
+        set((state) => ({
+          tasks: state.tasks.map((t) =>
+            t.id === taskId ? { ...t, subtasks: [...t.subtasks, subtask] } : t
+          ),
+        }));
+      } else {
+        const dummySub = {
+          id: `sub-${Date.now()}`,
+          task_id: taskId,
+          title,
+          completed: 0,
+          position: 0,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        };
+        set((state) => ({
+          tasks: state.tasks.map((t) =>
+            t.id === taskId ? { ...t, subtasks: [...t.subtasks, dummySub] } : t
+          ),
+        }));
+      }
+    } catch (err: unknown) {
+      set({ error: (err as Error).message });
+    }
+  },
+
+  toggleSubtask: async (taskId: string, subtaskId: string) => {
+    // Optimistic toggle
+    set((state) => ({
+      tasks: state.tasks.map((t) => {
+        if (t.id !== taskId) return t;
+        return {
+          ...t,
+          subtasks: t.subtasks.map((s) =>
+            s.id === subtaskId ? { ...s, completed: s.completed ? 0 : 1 } : s
+          ),
+        };
+      }),
+    }));
+
+    try {
+      if (window.electronAPI?.toggleSubtask) {
+        await window.electronAPI.toggleSubtask(subtaskId);
+      }
+    } catch (err: unknown) {
+      set({ error: (err as Error).message });
+    }
+  },
+
+  deleteSubtask: async (taskId: string, subtaskId: string) => {
+    set((state) => ({
+      tasks: state.tasks.map((t) => {
+        if (t.id !== taskId) return t;
+        return {
+          ...t,
+          subtasks: t.subtasks.filter((s) => s.id !== subtaskId),
+        };
+      }),
+    }));
+
+    try {
+      if (window.electronAPI?.deleteSubtask) {
+        await window.electronAPI.deleteSubtask(subtaskId);
       }
     } catch (err: unknown) {
       set({ error: (err as Error).message });

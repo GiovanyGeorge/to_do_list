@@ -171,7 +171,7 @@ export const SettingsPage: React.FC = () => {
       {/* Header */}
       <div>
         <h1 className="text-2xl font-bold text-text-primary flex items-center gap-2">
-          <Settings className="w-6 h-6 text-brand-purple" />
+          <Settings className="w-6 h-6 text-accent" />
           {t("nav.settings")}
         </h1>
         <p className="text-sm text-text-secondary mt-1">
@@ -183,7 +183,7 @@ export const SettingsPage: React.FC = () => {
       <Card className="p-6 space-y-4">
         <div className="flex items-center gap-3">
           <div className="p-2 rounded-lg bg-background-elevated border border-border-subtle">
-            <Languages className="w-5 h-5 text-brand-purple" />
+            <Languages className="w-5 h-5 text-accent" />
           </div>
           <div>
             <h2 className="text-base font-semibold text-text-primary">{t("settings.language")}</h2>
@@ -198,8 +198,8 @@ export const SettingsPage: React.FC = () => {
             onClick={() => handleLanguageChange("en")}
             className={`p-4 rounded-xl border text-left transition-all ${
               currentLang.startsWith("en")
-                ? "bg-brand-purple/10 border-brand-purple text-text-primary"
-                : "bg-background-elevated border-border-subtle text-text-secondary hover:border-brand-purple/30"
+                ? "bg-accent/10 border-accent text-text-primary"
+                : "bg-background-elevated border-border-subtle text-text-secondary hover:border-accent/30"
             }`}
           >
             <div className="font-semibold text-sm">English</div>
@@ -210,8 +210,8 @@ export const SettingsPage: React.FC = () => {
             onClick={() => handleLanguageChange("ar")}
             className={`p-4 rounded-xl border text-right transition-all font-arabic ${
               currentLang.startsWith("ar")
-                ? "bg-brand-purple/10 border-brand-purple text-text-primary"
-                : "bg-background-elevated border-border-subtle text-text-secondary hover:border-brand-purple/30"
+                ? "bg-accent/10 border-accent text-text-primary"
+                : "bg-background-elevated border-border-subtle text-text-secondary hover:border-accent/30"
             }`}
           >
             <div className="font-semibold text-sm">العربية (Arabic)</div>
@@ -371,7 +371,7 @@ export const SettingsPage: React.FC = () => {
         <div className="flex items-center justify-between flex-wrap gap-2">
           <div className="flex items-center gap-3">
             <div className="p-2 rounded-lg bg-background-elevated border border-border-subtle">
-              <HardDrive className="w-5 h-5 text-brand-purple" />
+              <HardDrive className="w-5 h-5 text-accent" />
             </div>
             <div>
               <h2 className="text-base font-semibold text-text-primary">Backups & Disaster Recovery</h2>
@@ -388,7 +388,7 @@ export const SettingsPage: React.FC = () => {
         </div>
 
         {restoreStatus && (
-          <div className="p-3 rounded-lg bg-background-elevated border border-brand-purple/40 text-xs text-brand-purple flex items-center gap-2">
+          <div className="p-3 rounded-lg bg-background-elevated border border-accent/40 text-xs text-accent flex items-center gap-2">
             <Info className="w-4 h-4 shrink-0" />
             <span>{restoreStatus}</span>
           </div>
@@ -478,10 +478,10 @@ export const SettingsPage: React.FC = () => {
           <button
             onClick={() => handleExport("tasks")}
             disabled={isExporting !== null}
-            className="p-4 rounded-xl bg-background-elevated border border-border-subtle hover:border-brand-purple/40 text-left transition-all flex flex-col justify-between"
+            className="p-4 rounded-xl bg-background-elevated border border-border-subtle hover:border-accent/40 text-left transition-all flex flex-col justify-between"
           >
             <div className="flex items-center justify-between w-full">
-              <FileSpreadsheet className="w-5 h-5 text-brand-purple" />
+              <FileSpreadsheet className="w-5 h-5 text-accent" />
               <Download className="w-4 h-4 text-text-muted" />
             </div>
             <div className="mt-4">

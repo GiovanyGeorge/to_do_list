@@ -34,7 +34,6 @@ export const AnalyticsPage: React.FC = () => {
         const res = await window.electronAPI.getAnalyticsSummary(startStr, endStr);
         setData(res);
       } else {
-        // Mock fallback for isolated preview
         setData({
           tasks_completed_count: 8,
           tasks_created_count: 10,
@@ -60,7 +59,7 @@ export const AnalyticsPage: React.FC = () => {
             {
               id: "p1",
               name: "LifeFlow Desktop",
-              color: "#E99A43",
+              color: "#C2410C",
               progress_percent: 65,
               completed_tasks: 13,
               total_tasks: 20,
@@ -74,34 +73,39 @@ export const AnalyticsPage: React.FC = () => {
   }, [range]);
 
   const maxDailyCount = data?.daily_trends
-    ? Math.max(1, ...data.daily_trends.map((d) => Math.max(d.completed_count, d.created_count)))
+    ? Math.max(
+        1,
+        ...data.daily_trends.map((d) =>
+          Math.max(d.completed_count, d.created_count)
+        )
+      )
     : 1;
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto">
       {/* Header & Date Range Filter */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 rounded-2xl bg-background-card border border-border-subtle">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-6 rounded-2xl bg-white border border-[rgba(28,25,23,0.08)] shadow-card">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-accent/15 text-accent flex items-center justify-center">
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-accent-glow to-accent text-accent-light flex items-center justify-center shadow-sm">
             <BarChart3 className="w-5 h-5" />
           </div>
           <div>
-            <h1 className="text-lg font-bold text-text-primary tracking-tight">
-              {t("nav.analytics")}
+            <h1 className="text-xl font-bold font-sora text-text-primary tracking-tight">
+              {t("nav.analytics") || "Insights & Trends"}
             </h1>
-            <p className="text-xs text-text-secondary">
-              Productivity trends, completion velocity, and habit consistency
+            <p className="text-xs text-text-secondary mt-0.5">
+              Gentle, calm insights on completion velocity and habit consistency.
             </p>
           </div>
         </div>
 
         {/* Range Selector */}
-        <div className="flex items-center p-1 rounded-xl bg-background-elevated border border-border-subtle self-start sm:self-auto">
+        <div className="flex items-center p-1 rounded-full bg-background-elevated border border-[rgba(28,25,23,0.08)] self-start sm:self-auto">
           <button
             onClick={() => setRange("7d")}
-            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+            className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
               range === "7d"
-                ? "bg-accent text-background font-semibold"
+                ? "bg-white text-text-primary font-semibold shadow-sm font-sora"
                 : "text-text-secondary hover:text-text-primary"
             }`}
           >
@@ -109,9 +113,9 @@ export const AnalyticsPage: React.FC = () => {
           </button>
           <button
             onClick={() => setRange("30d")}
-            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+            className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
               range === "30d"
-                ? "bg-accent text-background font-semibold"
+                ? "bg-white text-text-primary font-semibold shadow-sm font-sora"
                 : "text-text-secondary hover:text-text-primary"
             }`}
           >
@@ -119,9 +123,9 @@ export const AnalyticsPage: React.FC = () => {
           </button>
           <button
             onClick={() => setRange("this_month")}
-            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+            className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
               range === "this_month"
-                ? "bg-accent text-background font-semibold"
+                ? "bg-white text-text-primary font-semibold shadow-sm font-sora"
                 : "text-text-secondary hover:text-text-primary"
             }`}
           >
@@ -131,64 +135,74 @@ export const AnalyticsPage: React.FC = () => {
       </div>
 
       {/* Overview Stat Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="p-5 rounded-2xl bg-background-card border border-border-subtle">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
+        <div className="p-5 rounded-2xl bg-white border border-[rgba(28,25,23,0.08)] shadow-card">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-text-secondary">Completion Rate</span>
-            <span className="p-2 rounded-lg bg-emerald-500/10 text-emerald-400">
+            <span className="text-xs font-medium text-text-secondary">
+              Completion Rate
+            </span>
+            <span className="p-2 rounded-xl bg-status-success/10 text-status-success">
               <TrendingUp className="w-4 h-4" />
             </span>
           </div>
-          <div className="mt-4">
-            <span className="text-2xl font-bold text-text-primary">
+          <div className="mt-4 flex items-baseline">
+            <span className="text-3xl font-bold font-sora text-text-primary tabular-nums">
               {data?.completion_rate || 0}%
             </span>
-            <span className="text-xs text-text-muted ml-2 rtl:mr-2">of created tasks</span>
+            <span className="text-xs text-text-muted ml-2 rtl:mr-2">
+              of active tasks
+            </span>
           </div>
         </div>
 
-        <div className="p-5 rounded-2xl bg-background-card border border-border-subtle">
+        <div className="p-5 rounded-2xl bg-white border border-[rgba(28,25,23,0.08)] shadow-card">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-text-secondary">Tasks Completed</span>
-            <span className="p-2 rounded-lg bg-accent/10 text-accent">
+            <span className="text-xs font-medium text-text-secondary">
+              Tasks Completed
+            </span>
+            <span className="p-2 rounded-xl bg-accent/10 text-accent">
               <CheckCircle2 className="w-4 h-4" />
             </span>
           </div>
-          <div className="mt-4">
-            <span className="text-2xl font-bold text-text-primary">
+          <div className="mt-4 flex items-baseline">
+            <span className="text-3xl font-bold font-sora text-accent tabular-nums">
               {data?.tasks_completed_count || 0}
             </span>
             <span className="text-xs text-text-muted ml-2 rtl:mr-2">tasks</span>
           </div>
         </div>
 
-        <div className="p-5 rounded-2xl bg-background-card border border-border-subtle">
+        <div className="p-5 rounded-2xl bg-white border border-[rgba(28,25,23,0.08)] shadow-card">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-text-secondary">Active Projects</span>
-            <span className="p-2 rounded-lg bg-blue-500/10 text-blue-400">
+            <span className="text-xs font-medium text-text-secondary">
+              Active Projects
+            </span>
+            <span className="p-2 rounded-xl bg-background-elevated text-text-secondary">
               <FolderKanban className="w-4 h-4" />
             </span>
           </div>
-          <div className="mt-4">
-            <span className="text-2xl font-bold text-text-primary">
+          <div className="mt-4 flex items-baseline">
+            <span className="text-3xl font-bold font-sora text-text-primary tabular-nums">
               {data?.active_projects_count || 0}
             </span>
             <span className="text-xs text-text-muted ml-2 rtl:mr-2">active</span>
           </div>
         </div>
 
-        <div className="p-5 rounded-2xl bg-background-card border border-border-subtle">
+        <div className="p-5 rounded-2xl bg-white border border-[rgba(28,25,23,0.08)] shadow-card">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-text-secondary">Habit Consistency</span>
-            <span className="p-2 rounded-lg bg-purple-500/10 text-purple-400">
+            <span className="text-xs font-medium text-text-secondary">
+              Habit Consistency
+            </span>
+            <span className="p-2 rounded-xl bg-[#7C3AED]/10 text-[#7C3AED]">
               <Sparkles className="w-4 h-4" />
             </span>
           </div>
-          <div className="mt-4">
-            <span className="text-2xl font-bold text-text-primary">
+          <div className="mt-4 flex items-baseline">
+            <span className="text-3xl font-bold font-sora text-[#7C3AED] tabular-nums">
               {data?.average_habit_consistency || 0}%
             </span>
-            <span className="text-xs text-text-muted ml-2 rtl:mr-2">in range</span>
+            <span className="text-xs text-text-muted ml-2 rtl:mr-2">streak rate</span>
           </div>
         </div>
       </div>
@@ -196,32 +210,32 @@ export const AnalyticsPage: React.FC = () => {
       {/* Main Trends Chart & Breakdown */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Daily Completion Chart */}
-        <div className="lg:col-span-2 p-6 rounded-2xl bg-background-card border border-border-subtle flex flex-col justify-between">
+        <div className="lg:col-span-2 p-6 rounded-2xl bg-white border border-[rgba(28,25,23,0.08)] shadow-card flex flex-col justify-between">
           <div>
             <div className="flex items-center justify-between mb-4">
               <div>
-                <h3 className="text-sm font-semibold text-text-primary">
-                  Daily Completion Trends
+                <h3 className="text-sm font-bold font-sora text-text-primary">
+                  Daily Activity Trends
                 </h3>
                 <p className="text-xs text-text-secondary mt-0.5">
-                  Tasks finished compared to new tasks captured
+                  Tasks finished compared to new items captured.
                 </p>
               </div>
 
               <div className="flex items-center gap-4 text-[11px]">
                 <div className="flex items-center gap-1.5">
-                  <span className="w-2.5 h-2.5 rounded-sm bg-accent" />
-                  <span className="text-text-secondary">Completed</span>
+                  <span className="w-2.5 h-2.5 rounded-full bg-accent" />
+                  <span className="text-text-secondary font-medium">Completed</span>
                 </div>
                 <div className="flex items-center gap-1.5">
-                  <span className="w-2.5 h-2.5 rounded-sm bg-background-elevated border border-border-subtle" />
-                  <span className="text-text-secondary">Created</span>
+                  <span className="w-2.5 h-2.5 rounded-full bg-background-elevated border border-[rgba(28,25,23,0.12)]" />
+                  <span className="text-text-secondary font-medium">Created</span>
                 </div>
               </div>
             </div>
 
             {/* Visual Bar Chart */}
-            <div className="h-56 flex items-end gap-2 pt-6 pb-2 border-b border-border-subtle/50">
+            <div className="h-56 flex items-end gap-2 pt-6 pb-2 border-b border-[rgba(28,25,23,0.06)]">
               {data?.daily_trends && data.daily_trends.length > 0 ? (
                 data.daily_trends.map((item) => {
                   const compHeight = Math.max(
@@ -243,17 +257,17 @@ export const AnalyticsPage: React.FC = () => {
                         {/* Completed bar */}
                         <div
                           style={{ height: `${compHeight}px` }}
-                          className="w-full max-w-[14px] rounded-t-sm bg-accent transition-all group-hover:brightness-110"
+                          className="w-full max-w-[14px] rounded-t-sm bg-accent hover:bg-accent-glow transition-all"
                           title={`${item.date}: ${item.completed_count} completed`}
                         />
                         {/* Created bar */}
                         <div
                           style={{ height: `${creatHeight}px` }}
-                          className="w-full max-w-[14px] rounded-t-sm bg-background-elevated border border-border-subtle transition-all"
+                          className="w-full max-w-[14px] rounded-t-sm bg-background-elevated border border-[rgba(28,25,23,0.1)] transition-all"
                           title={`${item.date}: ${item.created_count} created`}
                         />
                       </div>
-                      <span className="text-[10px] text-text-muted mt-2 rotate-0 truncate">
+                      <span className="text-[10px] text-text-muted mt-2 font-mono truncate">
                         {shortDate}
                       </span>
                     </div>
@@ -271,19 +285,23 @@ export const AnalyticsPage: React.FC = () => {
         {/* Priority Distribution & Project Breakdown */}
         <div className="space-y-6">
           {/* Priority Breakdown */}
-          <div className="p-6 rounded-2xl bg-background-card border border-border-subtle space-y-4">
-            <h3 className="text-sm font-semibold text-text-primary">
+          <div className="p-6 rounded-2xl bg-white border border-[rgba(28,25,23,0.08)] shadow-card space-y-4">
+            <h3 className="text-sm font-bold font-sora text-text-primary">
               Tasks by Priority
             </h3>
             <div className="space-y-3">
               {data?.priority_distribution.map((item) => {
-                const total = data.priority_distribution.reduce((acc, p) => acc + p.count, 0);
-                const pct = total > 0 ? Math.round((item.count / total) * 100) : 0;
+                const total = data.priority_distribution.reduce(
+                  (acc, p) => acc + p.count,
+                  0
+                );
+                const pct =
+                  total > 0 ? Math.round((item.count / total) * 100) : 0;
                 const colors: Record<string, string> = {
-                  urgent: "bg-red-500",
-                  high: "bg-amber-500",
+                  urgent: "bg-status-danger",
+                  high: "bg-status-danger",
                   medium: "bg-accent",
-                  low: "bg-gray-500",
+                  low: "bg-status-success",
                 };
 
                 return (
@@ -292,7 +310,7 @@ export const AnalyticsPage: React.FC = () => {
                       <span className="capitalize text-text-secondary font-medium">
                         {item.priority}
                       </span>
-                      <span className="text-text-muted text-[11px]">
+                      <span className="text-text-muted text-[11px] font-mono">
                         {item.count} tasks ({pct}%)
                       </span>
                     </div>
@@ -310,18 +328,18 @@ export const AnalyticsPage: React.FC = () => {
 
           {/* Project Progress */}
           {data?.project_progress && data.project_progress.length > 0 && (
-            <div className="p-6 rounded-2xl bg-background-card border border-border-subtle space-y-3">
-              <h3 className="text-sm font-semibold text-text-primary">
+            <div className="p-6 rounded-2xl bg-white border border-[rgba(28,25,23,0.08)] shadow-card space-y-3">
+              <h3 className="text-sm font-bold font-sora text-text-primary">
                 Active Projects Progress
               </h3>
               <div className="space-y-2.5">
                 {data.project_progress.map((proj) => (
                   <div key={proj.id} className="space-y-1">
                     <div className="flex items-center justify-between text-xs">
-                      <span className="text-text-primary truncate max-w-[160px]">
+                      <span className="text-text-primary truncate max-w-[160px] font-medium">
                         {proj.name}
                       </span>
-                      <span className="text-accent font-semibold">
+                      <span className="text-accent font-bold font-sora tabular-nums">
                         {proj.progress_percent}%
                       </span>
                     </div>

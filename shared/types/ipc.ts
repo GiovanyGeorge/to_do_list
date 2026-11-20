@@ -19,6 +19,7 @@ import type {
   CategoryWithStats,
   CreateCategoryInput,
   UpdateCategoryInput,
+  SubtaskRecord,
 } from "./database";
 import type { BackupMetadata } from "../../electron/services/backupService";
 import type { ArchivedItem } from "../../database/repositories/archiveRepository";
@@ -61,6 +62,9 @@ export interface ElectronAPI {
     taskId: string,
     subtaskIds: string[]
   ) => Promise<{ success: boolean }>;
+  addSubtask: (taskId: string, title: string) => Promise<SubtaskRecord>;
+  toggleSubtask: (subtaskId: string, completed?: boolean) => Promise<SubtaskRecord | null>;
+  deleteSubtask: (subtaskId: string) => Promise<boolean>;
 
   // Category API
   listCategories: (includeArchived?: boolean) => Promise<CategoryWithStats[]>;

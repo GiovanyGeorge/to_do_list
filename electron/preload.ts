@@ -44,6 +44,12 @@ const api: ElectronAPI = {
   reorderTasks: (taskIds: string[]) => ipcRenderer.invoke("tasks:reorder", taskIds),
   reorderSubtasks: (taskId: string, subtaskIds: string[]) =>
     ipcRenderer.invoke("tasks:reorder-subtasks", taskId, subtaskIds),
+  addSubtask: (taskId: string, title: string) =>
+    ipcRenderer.invoke("tasks:add-subtask", taskId, title),
+  toggleSubtask: (subtaskId: string, completed?: boolean) =>
+    ipcRenderer.invoke("tasks:toggle-subtask", subtaskId, completed),
+  deleteSubtask: (subtaskId: string) =>
+    ipcRenderer.invoke("tasks:delete-subtask", subtaskId),
 
   // Category methods
   listCategories: (includeArchived?: boolean) =>

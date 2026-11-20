@@ -68,4 +68,25 @@ export function registerTaskIpc(taskService: TaskService): void {
       return { success: true };
     }
   );
+
+  ipcMain.handle(
+    "tasks:add-subtask",
+    async (_event, taskId: string, title: string) => {
+      return taskService.addSubtask(taskId, title);
+    }
+  );
+
+  ipcMain.handle(
+    "tasks:toggle-subtask",
+    async (_event, subtaskId: string, completed?: boolean) => {
+      return taskService.toggleSubtask(subtaskId, completed);
+    }
+  );
+
+  ipcMain.handle(
+    "tasks:delete-subtask",
+    async (_event, subtaskId: string) => {
+      return taskService.deleteSubtask(subtaskId);
+    }
+  );
 }

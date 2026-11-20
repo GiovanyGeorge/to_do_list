@@ -10,14 +10,14 @@ interface CreateProjectModalProps {
 }
 
 const PROJECT_COLORS = [
-  "#E99A43", // LifeFlow Amber
-  "#3B82F6", // Blue
-  "#10B981", // Emerald
-  "#8B5CF6", // Purple
-  "#EC4899", // Pink
-  "#EF4444", // Red
-  "#14B8A6", // Teal
-  "#F59E0B", // Yellow
+  "#C2410C", // Terracotta
+  "#15803D", // Green
+  "#7C3AED", // Purple
+  "#EA580C", // Muted orange
+  "#0D9488", // Teal
+  "#E11D48", // Rose
+  "#D97706", // Amber
+  "#475569", // Slate
 ];
 
 export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
@@ -70,7 +70,7 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
             setName(e.target.value);
             if (error) setError("");
           }}
-          placeholder="e.g., Mobile App Launch"
+          placeholder="e.g., Desktop App Launch"
           error={error}
         />
 
@@ -93,7 +93,7 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
                 type="button"
                 onClick={() => setColor(c)}
                 style={{ backgroundColor: c }}
-                className={`w-7 h-7 rounded-full border-2 transition-transform ${
+                className={`w-7 h-7 rounded-full border-2 transition-all ${
                   color === c
                     ? "scale-110 border-white shadow-md ring-2 ring-accent/40"
                     : "border-transparent opacity-80 hover:opacity-100 hover:scale-105"
@@ -104,13 +104,13 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
         </div>
 
         <Input
-          label="Target Deadline (optional)"
+          label="Due Date (optional)"
           type="date"
           value={dueDate}
           onChange={(e) => setDueDate(e.target.value)}
         />
 
-        <div className="flex items-center justify-end gap-3 pt-3 border-t border-border-subtle/50">
+        <div className="flex items-center justify-end gap-3 pt-3 border-t border-[rgba(28,25,23,0.08)]">
           <Button type="button" variant="outline" size="sm" onClick={onClose}>
             Cancel
           </Button>

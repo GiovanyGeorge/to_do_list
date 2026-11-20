@@ -25,14 +25,16 @@ export const Shell: React.FC = () => {
 
       {/* Global toast notifications */}
       <Toaster
-        theme="dark"
+        theme="light"
         position="bottom-right"
         toastOptions={{
           style: {
-            background: "#191D24",
-            border: "1px solid #2A303C",
-            color: "#F3F4F6",
-            fontFamily: "Inter, system-ui, sans-serif",
+            background: "#FFFFFF",
+            border: "1px solid rgba(28, 25, 23, 0.12)",
+            color: "#1C1917",
+            fontFamily: "'Plus Jakarta Sans', Cairo, system-ui, sans-serif",
+            borderRadius: "16px",
+            boxShadow: "0 1px 2px rgba(28,25,23,.05), 0 14px 30px -20px rgba(28,25,23,.24)",
           },
         }}
         richColors
