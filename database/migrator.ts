@@ -15,8 +15,14 @@ export function runMigrations(db: Database.Database): void {
     );
   `);
 
-  const migrationsDir = path.join(__dirname, "migrations");
-  if (!fs.existsSync(migrationsDir)) return;
+  const candidatePaths = [
+    path.join(__dirname, "migrations"),
+    path.join(__dirname, "../database/migrations"),
+    path.join(process.cwd(), "database/migrations"),
+    path.join(process.resourcesPath || "", "database/migrations"),
+  ];
+  const migrationsDir = candidatePaths.find((p) => fs.existsSync(p));
+  if (!migrationsDir) return;
 
   const files = fs
     .readdirSync(migrationsDir)

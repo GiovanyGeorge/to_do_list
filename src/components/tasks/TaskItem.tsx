@@ -1,8 +1,11 @@
 import React from "react";
+import { motion, AnimatePresence } from "motion/react";
 import { Check, Calendar, Sun, AlertTriangle } from "lucide-react";
 import clsx from "clsx";
-import type { TaskWithDetails, SubtaskRecord } from "@shared/types/database";
+import type { TaskWithDetails } from "@shared/types/database";
 import { PriorityBadge } from "../ui/Badge";
+import { useMotion } from "@/hooks/useMotion";
+import { useSoundManager } from "@/hooks/useSoundManager";
 
 interface TaskItemProps {
   task: TaskWithDetails;
@@ -18,8 +21,9 @@ export const TaskItem: React.FC<TaskItemProps> = ({
   onToggleMyDay,
 }) => {
   const isDone = task.status === "done";
+  const { checkboxPop, enabled } = useMotion();
+  const { playSound } = useSoundManager();
 
-  // Check if overdue: has due date in past and not done
   const isOverdue =
     task.due_at && !isDone && new Date(task.due_at).getTime() < Date.now();
 
@@ -30,25 +34,33 @@ export const TaskItem: React.FC<TaskItemProps> = ({
       }).format(new Date(task.due_at))
     : null;
 
+  const handleToggle = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!isDone) {
+      playSound("task_complete");
+    }
+    onToggle(task.id);
+  };
+
   return (
-    <div
+    <motion.div
+      layout={enabled ? true : false}
       onClick={() => onSelect(task.id)}
       className={clsx(
-        "group flex items-center justify-between p-3.5 rounded-xl border transition-all duration-150 cursor-pointer",
+        "group flex items-center justify-between p-3.5 rounded-xl border transition-colors duration-150 cursor-pointer",
         isDone
           ? "bg-background-card/40 border-border-subtle/40 opacity-70"
           : "bg-background-card border-border-subtle hover:border-accent/40 hover:bg-background-card/90"
       )}
+      whileHover={enabled ? { y: -1 } : undefined}
+      transition={{ duration: 0.15 }}
     >
       <div className="flex items-center gap-3 min-w-0 flex-1">
         {/* Checkbox button */}
         <button
           type="button"
           aria-label={isDone ? "Mark as incomplete" : "Mark as complete"}
-          onClick={(e) => {
-            e.stopPropagation();
-            onToggle(task.id);
-          }}
+          onClick={handleToggle}
           className={clsx(
             "w-5 h-5 rounded-md flex items-center justify-center border transition-all shrink-0",
             isDone
@@ -56,7 +68,19 @@ export const TaskItem: React.FC<TaskItemProps> = ({
               : "border-border hover:border-accent bg-background-elevated/40"
           )}
         >
-          {isDone && <Check className="w-3.5 h-3.5 stroke-[3]" />}
+          <AnimatePresence mode="wait">
+            {isDone && (
+              <motion.span
+                variants={checkboxPop}
+                initial="initial"
+                animate="animate"
+                exit="exit"
+                key="check"
+              >
+                <Check className="w-3.5 h-3.5 stroke-[3]" />
+              </motion.span>
+            )}
+          </AnimatePresence>
         </button>
 
         {/* Title and details */}
@@ -70,74 +94,65 @@ export const TaskItem: React.FC<TaskItemProps> = ({
             >
               {task.title}
             </span>
-
-            {task.blocked_by_incomplete_count && task.blocked_by_incomplete_count > 0 ? (
-              <span
-                title="Blocked by incomplete dependency"
-                className="inline-flex items-center text-[10px] text-amber-400 bg-amber-500/10 px-1.5 py-0.5 rounded"
-              >
-                Blocked
-              </span>
-            ) : null}
+            <PriorityBadge priority={task.priority} />
           </div>
 
-          {/* Subtasks summary & Due date */}
-          <div className="flex items-center gap-3 mt-1 text-[11px] text-text-muted">
-            {task.subtasks && task.subtasks.length > 0 && (
-              <span>
-                {task.subtasks.filter((s: SubtaskRecord) => s.completed === 1).length}/
-                {task.subtasks.length} subtasks
-              </span>
-            )}
-
+          {/* Meta row */}
+          <div className="flex items-center gap-3 mt-0.5">
             {formattedDueDate && (
               <span
                 className={clsx(
-                  "flex items-center gap-1",
-                  isOverdue ? "text-red-400 font-medium" : "text-text-muted"
+                  "text-xs flex items-center gap-1",
+                  isOverdue
+                    ? "text-red-400"
+                    : "text-text-muted"
                 )}
               >
                 {isOverdue ? (
-                  <AlertTriangle className="w-3 h-3 text-red-400" />
+                  <AlertTriangle className="w-3 h-3" />
                 ) : (
                   <Calendar className="w-3 h-3" />
                 )}
-                <span>{formattedDueDate}</span>
+                {formattedDueDate}
               </span>
             )}
-
-            {task.category && (
-              <span className="px-1.5 py-0.2 rounded bg-background-elevated text-text-secondary">
-                {task.category.name}
+            {task.is_in_my_day && (
+              <span className="text-xs text-accent flex items-center gap-1">
+                <Sun className="w-3 h-3" />
+                My Day
+              </span>
+            )}
+            {task.subtasks && task.subtasks.length > 0 && (
+              <span className="text-xs text-text-muted">
+                {task.subtasks.filter((s) => s.completed).length}/
+                {task.subtasks.length} subtasks
               </span>
             )}
           </div>
         </div>
       </div>
 
-      {/* Badges & Actions */}
-      <div className="flex items-center gap-2 shrink-0">
-        <PriorityBadge priority={task.priority} />
-
+      {/* Actions */}
+      <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
         {onToggleMyDay && (
           <button
             type="button"
-            title={task.is_in_my_day ? "Remove from My Day" : "Add to My Day"}
             onClick={(e) => {
               e.stopPropagation();
               onToggleMyDay(task.id);
             }}
             className={clsx(
-              "p-1.5 rounded-lg border transition-colors",
+              "p-1.5 rounded-md transition-colors",
               task.is_in_my_day
-                ? "bg-accent/15 text-accent border-accent/30"
-                : "text-text-muted border-border-subtle hover:text-text-primary hover:bg-background-elevated opacity-0 group-hover:opacity-100"
+                ? "text-accent hover:bg-accent/10"
+                : "text-text-muted hover:text-accent hover:bg-accent/10"
             )}
+            title={task.is_in_my_day ? "Remove from My Day" : "Add to My Day"}
           >
-            <Sun className="w-3.5 h-3.5" />
+            <Sun className="w-4 h-4" />
           </button>
         )}
       </div>
-    </div>
+    </motion.div>
   );
 };

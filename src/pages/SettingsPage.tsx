@@ -13,14 +13,25 @@ import {
   FileSpreadsheet,
   Info,
   Clock,
+  Sparkles,
+  Volume2,
+  VolumeX,
+  Eye,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
+import { usePreferencesStore } from "@/store/usePreferencesStore";
 import type { BackupMetadata } from "../../electron/services/backupService";
 
 export const SettingsPage: React.FC = () => {
   const { t, i18n } = useTranslation();
+  const {
+    animationsEnabled, setAnimationsEnabled,
+    reducedMotion, setReducedMotion,
+    soundEnabled, setSoundEnabled,
+    soundVolume, setSoundVolume,
+  } = usePreferencesStore();
 
   // Language state
   const currentLang = i18n.language || "en";
@@ -207,6 +218,108 @@ export const SettingsPage: React.FC = () => {
             <div className="text-xs text-text-muted mt-1">واجهة من اليمين إلى اليسار (RTL)</div>
           </button>
         </div>
+      </Card>
+
+      {/* Motion & Sound Preferences */}
+      <Card className="p-6 space-y-5">
+        <div className="flex items-center gap-3">
+          <div className="p-2 rounded-lg bg-background-elevated border border-border-subtle">
+            <Sparkles className="w-5 h-5 text-accent" />
+          </div>
+          <div>
+            <h2 className="text-base font-semibold text-text-primary">Motion & Sound</h2>
+            <p className="text-xs text-text-secondary">
+              Control animations, transitions, and UI sound effects.
+            </p>
+          </div>
+        </div>
+
+        {/* Animations toggle */}
+        <div className="flex items-center justify-between p-4 rounded-xl bg-background-elevated border border-border-subtle">
+          <div className="flex items-center gap-3">
+            <Eye className="w-4 h-4 text-accent" />
+            <div>
+              <div className="text-sm font-medium text-text-primary">Enable Animations</div>
+              <div className="text-xs text-text-muted">Page transitions, sidebar motion, hover effects</div>
+            </div>
+          </div>
+          <button
+            onClick={() => setAnimationsEnabled(!animationsEnabled)}
+            className={`w-10 h-5 rounded-full transition-colors relative ${
+              animationsEnabled ? "bg-accent" : "bg-background-card border border-border-subtle"
+            }`}
+          >
+            <span
+              className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow-sm transition-all ${
+                animationsEnabled ? "left-5" : "left-0.5"
+              }`}
+            />
+          </button>
+        </div>
+
+        {/* Reduced motion */}
+        <div className="flex items-center justify-between p-4 rounded-xl bg-background-elevated border border-border-subtle">
+          <div className="flex items-center gap-3">
+            <Eye className="w-4 h-4 text-text-muted" />
+            <div>
+              <div className="text-sm font-medium text-text-primary">Reduce Motion</div>
+              <div className="text-xs text-text-muted">Respect accessibility preferences, minimize all motion</div>
+            </div>
+          </div>
+          <button
+            onClick={() => setReducedMotion(!reducedMotion)}
+            className={`w-10 h-5 rounded-full transition-colors relative ${
+              reducedMotion ? "bg-accent" : "bg-background-card border border-border-subtle"
+            }`}
+          >
+            <span
+              className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow-sm transition-all ${
+                reducedMotion ? "left-5" : "left-0.5"
+              }`}
+            />
+          </button>
+        </div>
+
+        {/* Sound toggle */}
+        <div className="flex items-center justify-between p-4 rounded-xl bg-background-elevated border border-border-subtle">
+          <div className="flex items-center gap-3">
+            {soundEnabled ? <Volume2 className="w-4 h-4 text-accent" /> : <VolumeX className="w-4 h-4 text-text-muted" />}
+            <div>
+              <div className="text-sm font-medium text-text-primary">Sound Effects</div>
+              <div className="text-xs text-text-muted">Task completion, navigation, and modal sounds</div>
+            </div>
+          </div>
+          <button
+            onClick={() => setSoundEnabled(!soundEnabled)}
+            className={`w-10 h-5 rounded-full transition-colors relative ${
+              soundEnabled ? "bg-accent" : "bg-background-card border border-border-subtle"
+            }`}
+          >
+            <span
+              className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow-sm transition-all ${
+                soundEnabled ? "left-5" : "left-0.5"
+              }`}
+            />
+          </button>
+        </div>
+
+        {/* Volume slider */}
+        {soundEnabled && (
+          <div className="p-4 rounded-xl bg-background-elevated border border-border-subtle space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="text-sm font-medium text-text-primary">Volume</div>
+              <span className="text-xs text-text-muted font-mono">{Math.round(soundVolume * 100)}%</span>
+            </div>
+            <input
+              type="range"
+              min={0}
+              max={100}
+              value={Math.round(soundVolume * 100)}
+              onChange={(e) => setSoundVolume(parseInt(e.target.value, 10) / 100)}
+              className="w-full accent-accent h-1.5 bg-background-card rounded-full appearance-none cursor-pointer"
+            />
+          </div>
+        )}
       </Card>
 
       {/* Database & System Integrity */}
