@@ -3,7 +3,6 @@
   "version": "1.0.0",
   "description": "LifeFlow — Personal Desktop Productivity Manager",
   "main": "dist-electron/main.js",
-  "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build && electron-builder --dir",

@@ -4,3 +4,4 @@ dist-electron
 release
 .vite
 *.log
+.lifeflow-data

@@ -1,6 +1,10 @@
-import Database from "better-sqlite3";
+import type DatabaseType from "better-sqlite3";
+import { createRequire } from "node:module";
 import fs from "node:fs";
 import path from "node:path";
+
+const require = createRequire(import.meta.url);
+const Database = require("better-sqlite3") as typeof DatabaseType;
 
 export interface BackupMetadata {
   filename: string;
@@ -12,7 +16,7 @@ export interface BackupMetadata {
 
 export class BackupService {
   constructor(
-    private db: Database.Database,
+    private db: DatabaseType.Database,
     private dbPath: string,
     private backupsDir: string
   ) {

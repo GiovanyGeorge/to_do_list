@@ -1,8 +1,12 @@
-import Database from "better-sqlite3";
+import type DatabaseType from "better-sqlite3";
+import { createRequire } from "node:module";
 import path from "node:path";
 import fs from "node:fs";
 
-let dbInstance: Database.Database | null = null;
+const require = createRequire(import.meta.url);
+const Database = require("better-sqlite3") as typeof DatabaseType;
+
+let dbInstance: DatabaseType.Database | null = null;
 
 export function getDatabasePath(): string {
   // If running in Node/Electron or test environment
@@ -13,7 +17,7 @@ export function getDatabasePath(): string {
   return path.join(baseDir, "lifeflow.db");
 }
 
-export function initDatabase(customPath?: string): Database.Database {
+export function initDatabase(customPath?: string): DatabaseType.Database {
   if (dbInstance && !customPath) {
     return dbInstance;
   }
