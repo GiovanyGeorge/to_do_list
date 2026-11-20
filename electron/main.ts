@@ -1,7 +1,7 @@
 import { app, BrowserWindow, ipcMain } from "electron";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { initDatabase, closeDatabase } from "../database/connection";
+import { initDatabase, closeDatabase, getDatabasePath } from "../database/connection";
 import { runMigrations } from "../database/migrator";
 import { TaskRepository } from "../database/repositories/taskRepository";
 import { TaskService } from "./services/taskService";
@@ -22,6 +22,10 @@ import { AnalyticsRepository } from "../database/repositories/analyticsRepositor
 import { registerAnalyticsIpc } from "./ipc/analyticsIpc";
 import { WidgetWindowManager } from "./windows/widgetWindowManager";
 import { registerWidgetIpc } from "./ipc/widgetIpc";
+import { BackupService } from "./services/backupService";
+import { ExportService } from "./services/exportService";
+import { ArchiveRepository } from "../database/repositories/archiveRepository";
+import { registerBackupExportIpc } from "./ipc/backupExportIpc";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -36,6 +40,7 @@ process.env.VITE_PUBLIC = process.env.VITE_DEV_SERVER_URL
 let mainWindow: BrowserWindow | null = null;
 
 // Initialize Database & Services
+const dbPath = getDatabasePath();
 const db = initDatabase();
 runMigrations(db);
 
@@ -70,6 +75,12 @@ const widgetManager = new WidgetWindowManager(
   reminderRepo
 );
 registerWidgetIpc(widgetManager);
+
+const backupsDir = path.join(path.dirname(dbPath), "backups");
+const backupService = new BackupService(db, dbPath, backupsDir);
+const exportService = new ExportService(db);
+const archiveRepo = new ArchiveRepository(db);
+registerBackupExportIpc(backupService, exportService, archiveRepo);
 
 function createWindow() {
   mainWindow = new BrowserWindow({

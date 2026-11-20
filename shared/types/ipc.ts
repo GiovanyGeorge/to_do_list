@@ -16,6 +16,8 @@ import type {
   NoteWithTags,
   AnalyticsSummary,
 } from "./database";
+import type { BackupMetadata } from "../../electron/services/backupService";
+import type { ArchivedItem } from "../../database/repositories/archiveRepository";
 
 export interface AppInfo {
   name: string;
@@ -131,6 +133,26 @@ export interface ElectronAPI {
   closeWidget: (type: WidgetType) => Promise<boolean>;
   getWidgetStatus: () => Promise<Record<WidgetType, boolean>>;
   setWidgetAlwaysOnTop: (type: WidgetType, flag: boolean) => Promise<boolean>;
+
+  // Backup & Restore & Export API
+  createBackup: (type?: "manual" | "automatic") => Promise<BackupMetadata>;
+  listBackups: () => Promise<BackupMetadata[]>;
+  restoreBackup: (filepath: string) => Promise<{ success: boolean; message: string }>;
+  checkDatabaseIntegrity: () => Promise<{ status: "ok" | "error"; details: string }>;
+  exportTasksCSV: () => Promise<string>;
+  exportProjectsCSV: () => Promise<string>;
+  exportNotesCSV: () => Promise<string>;
+
+  // Archive API
+  listArchived: () => Promise<ArchivedItem[]>;
+  restoreArchived: (
+    type: "task" | "project" | "habit" | "note",
+    id: string
+  ) => Promise<boolean>;
+  deleteArchivedPermanently: (
+    type: "task" | "project" | "habit" | "note",
+    id: string
+  ) => Promise<boolean>;
 }
 
 declare global {

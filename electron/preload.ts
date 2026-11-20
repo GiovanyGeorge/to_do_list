@@ -140,6 +140,25 @@ const api: ElectronAPI = {
   getWidgetStatus: () => ipcRenderer.invoke("widgets:get-status"),
   setWidgetAlwaysOnTop: (type: WidgetType, flag: boolean) =>
     ipcRenderer.invoke("widgets:set-always-on-top", type, flag),
+
+  // Backup & Restore & Export methods
+  createBackup: (type?: "manual" | "automatic") =>
+    ipcRenderer.invoke("backup:create", type),
+  listBackups: () => ipcRenderer.invoke("backup:list"),
+  restoreBackup: (filepath: string) =>
+    ipcRenderer.invoke("backup:restore", filepath),
+  checkDatabaseIntegrity: () =>
+    ipcRenderer.invoke("backup:check-integrity"),
+  exportTasksCSV: () => ipcRenderer.invoke("export:tasks-csv"),
+  exportProjectsCSV: () => ipcRenderer.invoke("export:projects-csv"),
+  exportNotesCSV: () => ipcRenderer.invoke("export:notes-csv"),
+
+  // Archive methods
+  listArchived: () => ipcRenderer.invoke("archive:list"),
+  restoreArchived: (type: "task" | "project" | "habit" | "note", id: string) =>
+    ipcRenderer.invoke("archive:restore", type, id),
+  deleteArchivedPermanently: (type: "task" | "project" | "habit" | "note", id: string) =>
+    ipcRenderer.invoke("archive:delete", type, id),
 };
 
 contextBridge.exposeInMainWorld("electronAPI", api);

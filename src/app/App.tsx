@@ -12,6 +12,8 @@ import { GoalsPage } from "@/pages/GoalsPage";
 import { NotesPage } from "@/pages/NotesPage";
 import { AnalyticsPage } from "@/pages/AnalyticsPage";
 import { WidgetCenterPage } from "@/pages/WidgetCenterPage";
+import { ArchivePage } from "@/pages/ArchivePage";
+import { SettingsPage } from "@/pages/SettingsPage";
 import { TaskDetailsModal } from "@/components/tasks/TaskDetailsModal";
 
 // Standalone widget imports
@@ -20,16 +22,6 @@ import { TodayTasksWidget } from "@/components/widgets/TodayTasksWidget";
 import { QuickAddWidget } from "@/components/widgets/QuickAddWidget";
 import { PomodoroWidget } from "@/components/widgets/PomodoroWidget";
 import { HabitTrackerWidget } from "@/components/widgets/HabitTrackerWidget";
-
-// Placeholders for subsequent phases (Archive, Settings)
-const PlaceholderPage: React.FC<{ title: string }> = ({ title }) => (
-  <div className="p-8 rounded-2xl bg-background-card border border-border-subtle text-center">
-    <h2 className="text-xl font-bold text-text-primary mb-2">{title}</h2>
-    <p className="text-sm text-text-secondary">
-      This module is scheduled for implementation in upcoming roadmap phases.
-    </p>
-  </div>
-);
 
 export const App: React.FC = () => {
   // Check if loaded inside an independent widget window via query parameter: ?widget=<type>
@@ -82,8 +74,8 @@ export const App: React.FC = () => {
           <Route path="notes" element={<NotesPage />} />
           <Route path="analytics" element={<AnalyticsPage />} />
           <Route path="widgets" element={<WidgetCenterPage />} />
-          <Route path="archive" element={<PlaceholderPage title="Archive" />} />
-          <Route path="settings" element={<PlaceholderPage title="Settings" />} />
+          <Route path="archive" element={<ArchivePage />} />
+          <Route path="settings" element={<SettingsPage />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Route>
       </Routes>
