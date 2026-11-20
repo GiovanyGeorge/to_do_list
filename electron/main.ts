@@ -12,6 +12,12 @@ import { registerProjectIpc } from "./ipc/projectIpc";
 import { ReminderRepository } from "../database/repositories/reminderRepository";
 import { NotificationService } from "./services/notificationService";
 import { registerNotificationIpc } from "./ipc/notificationIpc";
+import { HabitRepository } from "../database/repositories/habitRepository";
+import { registerHabitIpc } from "./ipc/habitIpc";
+import { GoalRepository } from "../database/repositories/goalRepository";
+import { registerGoalIpc } from "./ipc/goalIpc";
+import { NoteRepository } from "../database/repositories/noteRepository";
+import { registerNoteIpc } from "./ipc/noteIpc";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -40,6 +46,15 @@ registerProjectIpc(projectService);
 const reminderRepo = new ReminderRepository(db);
 const notificationService = new NotificationService(reminderRepo);
 registerNotificationIpc(notificationService);
+
+const habitRepo = new HabitRepository(db);
+registerHabitIpc(habitRepo);
+
+const goalRepo = new GoalRepository(db);
+registerGoalIpc(goalRepo);
+
+const noteRepo = new NoteRepository(db);
+registerNoteIpc(noteRepo);
 
 function createWindow() {
   mainWindow = new BrowserWindow({

@@ -8,6 +8,7 @@ import type {
   UpdateProjectInput,
   ReminderType,
   NotificationLogRecord,
+  HabitFrequency,
 } from "../shared/types/database";
 
 const api: ElectronAPI = {
@@ -76,6 +77,58 @@ const api: ElectronAPI = {
       ipcRenderer.removeListener("notifications:new", handler);
     };
   },
+
+  // Habits methods
+  listHabits: (includeArchived?: boolean) =>
+    ipcRenderer.invoke("habits:list", includeArchived),
+  getHabit: (id: string) => ipcRenderer.invoke("habits:get", id),
+  createHabit: (input: {
+    name: string;
+    description?: string;
+    frequency?: HabitFrequency;
+    target_value?: number;
+    unit?: string;
+    color?: string;
+  }) => ipcRenderer.invoke("habits:create", input),
+  toggleHabitLog: (habitId: string, logDate: string) =>
+    ipcRenderer.invoke("habits:toggle-log", habitId, logDate),
+  deleteHabit: (id: string) => ipcRenderer.invoke("habits:delete", id),
+
+  // Goals methods
+  listGoals: (includeArchived?: boolean) =>
+    ipcRenderer.invoke("goals:list", includeArchived),
+  getGoal: (id: string) => ipcRenderer.invoke("goals:get", id),
+  createGoal: (input: {
+    title: string;
+    description?: string;
+    categoryId?: string;
+    projectId?: string;
+    startAt?: string;
+    targetDate?: string;
+    milestones?: string[];
+  }) => ipcRenderer.invoke("goals:create", input),
+  toggleGoalMilestone: (milestoneId: string) =>
+    ipcRenderer.invoke("goals:toggle-milestone", milestoneId),
+  addGoalMilestone: (goalId: string, title: string) =>
+    ipcRenderer.invoke("goals:add-milestone", goalId, title),
+  deleteGoal: (id: string) => ipcRenderer.invoke("goals:delete", id),
+
+  // Notes methods
+  listNotes: (search?: string) => ipcRenderer.invoke("notes:list", search),
+  getNote: (id: string) => ipcRenderer.invoke("notes:get", id),
+  createNote: (input: {
+    title: string;
+    content?: string;
+    color?: string;
+    isPinned?: boolean;
+    tagIds?: string[];
+  }) => ipcRenderer.invoke("notes:create", input),
+  toggleNotePin: (id: string) => ipcRenderer.invoke("notes:toggle-pin", id),
+  updateNote: (
+    id: string,
+    input: { title?: string; content?: string; color?: string }
+  ) => ipcRenderer.invoke("notes:update", id, input),
+  deleteNote: (id: string) => ipcRenderer.invoke("notes:delete", id),
 };
 
 contextBridge.exposeInMainWorld("electronAPI", api);

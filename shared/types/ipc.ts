@@ -9,6 +9,11 @@ import type {
   NotificationLogRecord,
   ReminderRecord,
   ReminderType,
+  HabitWithStats,
+  HabitFrequency,
+  GoalWithDetails,
+  GoalMilestoneRecord,
+  NoteWithTags,
 } from "./database";
 
 export interface AppInfo {
@@ -67,6 +72,53 @@ export interface ElectronAPI {
   getSetting: (key: string, defaultValue?: string) => Promise<string>;
   setSetting: (key: string, value: string) => Promise<boolean>;
   onNotificationReceived?: (callback: (notif: NotificationLogRecord) => void) => () => void;
+
+  // Habits API
+  listHabits: (includeArchived?: boolean) => Promise<HabitWithStats[]>;
+  getHabit: (id: string) => Promise<HabitWithStats | null>;
+  createHabit: (input: {
+    name: string;
+    description?: string;
+    frequency?: HabitFrequency;
+    target_value?: number;
+    unit?: string;
+    color?: string;
+  }) => Promise<HabitWithStats>;
+  toggleHabitLog: (habitId: string, logDate: string) => Promise<boolean>;
+  deleteHabit: (id: string) => Promise<boolean>;
+
+  // Goals API
+  listGoals: (includeArchived?: boolean) => Promise<GoalWithDetails[]>;
+  getGoal: (id: string) => Promise<GoalWithDetails | null>;
+  createGoal: (input: {
+    title: string;
+    description?: string;
+    categoryId?: string;
+    projectId?: string;
+    startAt?: string;
+    targetDate?: string;
+    milestones?: string[];
+  }) => Promise<GoalWithDetails>;
+  toggleGoalMilestone: (milestoneId: string) => Promise<boolean>;
+  addGoalMilestone: (goalId: string, title: string) => Promise<GoalMilestoneRecord>;
+  deleteGoal: (id: string) => Promise<boolean>;
+
+  // Notes API
+  listNotes: (search?: string) => Promise<NoteWithTags[]>;
+  getNote: (id: string) => Promise<NoteWithTags | null>;
+  createNote: (input: {
+    title: string;
+    content?: string;
+    color?: string;
+    isPinned?: boolean;
+    tagIds?: string[];
+  }) => Promise<NoteWithTags>;
+  toggleNotePin: (id: string) => Promise<boolean>;
+  updateNote: (
+    id: string,
+    input: { title?: string; content?: string; color?: string }
+  ) => Promise<NoteWithTags | null>;
+  deleteNote: (id: string) => Promise<boolean>;
 }
 
 declare global {

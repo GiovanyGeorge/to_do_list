@@ -174,3 +174,86 @@ export interface AppSettingRecord {
   value: string;
   updated_at: string;
 }
+
+// Habits Types
+export type HabitFrequency = "daily" | "weekdays" | "weekly" | "custom";
+
+export interface HabitRecord {
+  id: string;
+  name: string;
+  description: string | null;
+  frequency: HabitFrequency;
+  target_value: number;
+  unit: string | null;
+  color: string | null;
+  status: "active" | "paused" | "archived";
+  created_at: string;
+  updated_at: string;
+  archived_at: string | null;
+}
+
+export interface HabitLogRecord {
+  id: string;
+  habit_id: string;
+  log_date: string;
+  value: number;
+  notes: string | null;
+  created_at: string;
+}
+
+export interface HabitWithStats extends HabitRecord {
+  current_streak: number;
+  longest_streak: number;
+  total_completions: number;
+  is_completed_today: boolean;
+  recent_logs: string[]; // dates of logs in past 7 days
+}
+
+// Goals Types
+export interface GoalMilestoneRecord {
+  id: string;
+  goal_id: string;
+  title: string;
+  completed: number;
+  position: number;
+  due_at: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface GoalRecord {
+  id: string;
+  title: string;
+  description: string | null;
+  category_id: string | null;
+  project_id: string | null;
+  status: "active" | "completed" | "on_hold" | "archived";
+  start_at: string | null;
+  target_date: string | null;
+  created_at: string;
+  updated_at: string;
+  archived_at: string | null;
+}
+
+export interface GoalWithDetails extends GoalRecord {
+  milestones: GoalMilestoneRecord[];
+  progress_percent: number;
+  completed_milestones_count: number;
+  total_milestones_count: number;
+}
+
+// Notes Types
+export interface NoteRecord {
+  id: string;
+  title: string;
+  content: string | null;
+  is_pinned: number;
+  color: string | null;
+  created_at: string;
+  updated_at: string;
+  archived_at: string | null;
+}
+
+export interface NoteWithTags extends NoteRecord {
+  tags: TagRecord[];
+}

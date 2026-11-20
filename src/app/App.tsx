@@ -7,9 +7,12 @@ import { InboxPage } from "@/pages/InboxPage";
 import { AllTasksPage } from "@/pages/AllTasksPage";
 import { ProjectsPage } from "@/pages/ProjectsPage";
 import { CalendarPage } from "@/pages/CalendarPage";
+import { HabitsPage } from "@/pages/HabitsPage";
+import { GoalsPage } from "@/pages/GoalsPage";
+import { NotesPage } from "@/pages/NotesPage";
 import { TaskDetailsModal } from "@/components/tasks/TaskDetailsModal";
 
-// Placeholders for subsequent phases (Habits, Goals, Notes, Analytics, etc.)
+// Placeholders for subsequent phases (Analytics, Archive, Widgets, Settings)
 const PlaceholderPage: React.FC<{ title: string }> = ({ title }) => (
   <div className="p-8 rounded-2xl bg-background-card border border-border-subtle text-center">
     <h2 className="text-xl font-bold text-text-primary mb-2">{title}</h2>
@@ -30,9 +33,9 @@ export const App: React.FC = () => {
           <Route path="tasks" element={<AllTasksPage />} />
           <Route path="projects" element={<ProjectsPage />} />
           <Route path="calendar" element={<CalendarPage />} />
-          <Route path="habits" element={<PlaceholderPage title="Habits" />} />
-          <Route path="goals" element={<PlaceholderPage title="Goals" />} />
-          <Route path="notes" element={<PlaceholderPage title="Notes" />} />
+          <Route path="habits" element={<HabitsPage />} />
+          <Route path="goals" element={<GoalsPage />} />
+          <Route path="notes" element={<NotesPage />} />
           <Route path="analytics" element={<PlaceholderPage title="Analytics" />} />
           <Route path="archive" element={<PlaceholderPage title="Archive" />} />
           <Route path="widgets" element={<PlaceholderPage title="Widget Center" />} />
