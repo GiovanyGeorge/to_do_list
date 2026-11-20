@@ -1,13 +1,22 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { Outlet, useLocation } from "react-router-dom";
 import { AnimatePresence } from "motion/react";
 import { Toaster } from "sonner";
 import { Sidebar } from "./Sidebar";
 import { Header } from "./Header";
 import { AnimatedPage } from "./AnimatedPage";
+import { DailyVerseButton } from "../bible/DailyVerseButton";
+import { DailyVersePopover } from "../bible/DailyVersePopover";
+import { BibleFavoritesModal } from "../bible/BibleFavoritesModal";
+import { useBibleStore } from "@/store/useBibleStore";
 
 export const Shell: React.FC = () => {
   const location = useLocation();
+  const { checkDailyVerseEnabled } = useBibleStore();
+
+  useEffect(() => {
+    checkDailyVerseEnabled();
+  }, [checkDailyVerseEnabled]);
 
   return (
     <div className="flex h-screen w-screen overflow-hidden bg-background text-text-primary select-none">
@@ -22,6 +31,11 @@ export const Shell: React.FC = () => {
           </AnimatePresence>
         </main>
       </div>
+
+      {/* Daily Bible Verse Floating Button, Popover & Favorites Modal */}
+      <DailyVerseButton />
+      <DailyVersePopover />
+      <BibleFavoritesModal />
 
       {/* Global toast notifications */}
       <Toaster

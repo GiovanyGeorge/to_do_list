@@ -180,6 +180,26 @@ const api: ElectronAPI = {
     ipcRenderer.invoke("archive:restore", type, id),
   deleteArchivedPermanently: (type: "task" | "project" | "habit" | "note", id: string) =>
     ipcRenderer.invoke("archive:delete", type, id),
+
+  // Bible methods
+  getDailyVerse: (dateStr?: string) =>
+    ipcRenderer.invoke("bible:get-daily-verse", dateStr),
+  toggleBibleFavorite: (verseId: number, notes?: string) =>
+    ipcRenderer.invoke("bible:toggle-favorite", verseId, notes),
+  isBibleFavorite: (verseId: number) =>
+    ipcRenderer.invoke("bible:is-favorite", verseId),
+  listBibleFavorites: (searchQuery?: string) =>
+    ipcRenderer.invoke("bible:list-favorites", searchQuery),
+  removeBibleFavorite: (verseId: number) =>
+    ipcRenderer.invoke("bible:remove-favorite", verseId),
+  listBibleBooks: (testament?: "old" | "new") =>
+    ipcRenderer.invoke("bible:list-books", testament),
+  searchBibleVerses: (
+    query: string,
+    options?: { bookId?: number; testament?: "old" | "new"; limit?: number; offset?: number }
+  ) => ipcRenderer.invoke("bible:search-verses", query, options),
+  getBibleChapter: (bookId: number, chapter: number) =>
+    ipcRenderer.invoke("bible:get-chapter", bookId, chapter),
 };
 
 contextBridge.exposeInMainWorld("electronAPI", api);

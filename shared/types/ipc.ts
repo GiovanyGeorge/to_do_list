@@ -20,6 +20,10 @@ import type {
   CreateCategoryInput,
   UpdateCategoryInput,
   SubtaskRecord,
+  BibleBookRecord,
+  DailyVerseWithDetails,
+  BibleFavoriteRecord,
+  BibleFavoriteWithVerse,
 } from "./database";
 import type { BackupMetadata } from "../../electron/services/backupService";
 import type { ArchivedItem } from "../../database/repositories/archiveRepository";
@@ -181,6 +185,27 @@ export interface ElectronAPI {
     type: "task" | "project" | "habit" | "note",
     id: string
   ) => Promise<boolean>;
+
+  // Bible API (Daily Verse, Favorites, Search, Library)
+  getDailyVerse: (dateStr?: string) => Promise<DailyVerseWithDetails>;
+  toggleBibleFavorite: (
+    verseId: number,
+    notes?: string
+  ) => Promise<{ isFavorite: boolean; favorite?: BibleFavoriteRecord }>;
+  isBibleFavorite: (verseId: number) => Promise<boolean>;
+  listBibleFavorites: (
+    searchQuery?: string
+  ) => Promise<BibleFavoriteWithVerse[]>;
+  removeBibleFavorite: (verseId: number) => Promise<boolean>;
+  listBibleBooks: (testament?: "old" | "new") => Promise<BibleBookRecord[]>;
+  searchBibleVerses: (
+    query: string,
+    options?: { bookId?: number; testament?: "old" | "new"; limit?: number; offset?: number }
+  ) => Promise<DailyVerseWithDetails[]>;
+  getBibleChapter: (
+    bookId: number,
+    chapter: number
+  ) => Promise<DailyVerseWithDetails[]>;
 }
 
 declare global {

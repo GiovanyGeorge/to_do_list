@@ -14,12 +14,24 @@
     {
       "from": "database/migrations",
       "to": "database/migrations"
+    },
+    {
+      "from": "database/svd.sqlite",
+      "to": "database/svd.sqlite"
+    },
+    {
+      "from": "database/psalmsSplit.json",
+      "to": "database/psalmsSplit.json"
     }
   ],
   "win": {
     "target": [
       {
         "target": "nsis",
+        "arch": ["x64"]
+      },
+      {
+        "target": "dir",
         "arch": ["x64"]
       }
     ]

@@ -317,3 +317,52 @@ export interface AnalyticsSummary {
   priority_distribution: PriorityDistributionItem[];
   project_progress: ProjectAnalyticsItem[];
 }
+
+// ==========================================
+// Bible Types (Smith & Van Dyke Translation)
+// ==========================================
+
+export interface BibleBookRecord {
+  id: number;
+  name_ar: string;
+  name_en: string;
+  testament: "old" | "new";
+  abbr_ar: string;
+  abbr_en: string;
+  chapters_count: number;
+}
+
+export interface BibleVerseRecord {
+  id: number;
+  book_id: number;
+  chapter: number;
+  verse: number;
+  heading?: string | null;
+  text: string;
+  translation: string;
+}
+
+export interface DailyVerseWithDetails extends BibleVerseRecord {
+  book_name_ar: string;
+  book_name_en: string;
+  book_abbr_ar: string;
+  book_abbr_en: string;
+  testament: "old" | "new";
+  date?: string;
+  is_favorite?: boolean;
+}
+
+export interface BibleFavoriteRecord {
+  id: string;
+  verse_id: number;
+  notes?: string | null;
+  created_at: string;
+}
+
+export interface BibleFavoriteWithVerse extends DailyVerseWithDetails {
+  favorite_id: string;
+  notes?: string | null;
+  favorited_at: string;
+}
+
+

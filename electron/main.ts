@@ -44,6 +44,8 @@ import { ArchiveRepository } from "../database/repositories/archiveRepository";
 import { registerBackupExportIpc } from "./ipc/backupExportIpc";
 import { CategoryRepository } from "../database/repositories/categoryRepository";
 import { registerCategoryIpc } from "./ipc/categoryIpc";
+import { BibleRepository } from "../database/repositories/bibleRepository";
+import { registerBibleIpc } from "./ipc/bibleIpc";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -103,6 +105,9 @@ function initServices() {
 
   const categoryRepo = new CategoryRepository(db);
   registerCategoryIpc(categoryRepo);
+
+  const bibleRepo = new BibleRepository(db);
+  registerBibleIpc(bibleRepo);
 }
 
 function createWindow() {

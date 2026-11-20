@@ -17,11 +17,14 @@ import {
   Volume2,
   VolumeX,
   Eye,
+  BookOpen,
+  Bookmark,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { usePreferencesStore } from "@/store/usePreferencesStore";
+import { useBibleStore } from "@/store/useBibleStore";
 import type { BackupMetadata } from "../../electron/services/backupService";
 
 export const SettingsPage: React.FC = () => {
@@ -32,6 +35,13 @@ export const SettingsPage: React.FC = () => {
     soundEnabled, setSoundEnabled,
     soundVolume, setSoundVolume,
   } = usePreferencesStore();
+
+  const {
+    isDailyVerseEnabled,
+    setDailyVerseEnabled,
+    openFavoritesModal,
+    favorites,
+  } = useBibleStore();
 
   // Language state
   const currentLang = i18n.language || "en";
@@ -320,6 +330,74 @@ export const SettingsPage: React.FC = () => {
             />
           </div>
         )}
+      </Card>
+
+      {/* Daily Bible Verse (Smith & Van Dyke) */}
+      <Card className="p-6 space-y-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-lg bg-background-elevated border border-border-subtle">
+              <BookOpen className="w-5 h-5 text-accent" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h2 className="text-base font-semibold text-text-primary">
+                  {currentLang === "ar" ? "آية اليوم (الكتاب المقدس)" : "Daily Bible Verse"}
+                </h2>
+                <Badge variant="warning" size="sm">
+                  فان دايك (SVD)
+                </Badge>
+              </div>
+              <p className="text-xs text-text-secondary mt-0.5">
+                {currentLang === "ar"
+                  ? "آية يومية ملهمة من ترجمة فان دايك (Smith & Van Dyke 1865) تعمل بالكامل دون اتصال بالإنترنت."
+                  : "Daily inspiring verse from the Smith & Van Dyke Arabic translation (1865), 100% offline."}
+              </p>
+            </div>
+          </div>
+
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={openFavoritesModal}
+            className="flex items-center gap-1.5"
+          >
+            <Bookmark className="w-4 h-4 text-accent" />
+            <span>
+              {currentLang === "ar"
+                ? `المفضلة المحفوظة (${favorites.length})`
+                : `Saved Favorites (${favorites.length})`}
+            </span>
+          </Button>
+        </div>
+
+        {/* Floating icon toggle */}
+        <div className="flex items-center justify-between p-4 rounded-xl bg-background-elevated border border-border-subtle">
+          <div>
+            <div className="text-sm font-medium text-text-primary">
+              {currentLang === "ar" ? "إظهار الأيقونة العائمة في التطبيق" : "Show Floating Bible Icon"}
+            </div>
+            <div className="text-xs text-text-muted">
+              {currentLang === "ar"
+                ? "أيقونة أنيقة وسريعة في زاوية الشاشة للوصول السريع إلى آية اليوم"
+                : "A small, elegant icon in the corner of all main pages to quickly view today's verse"}
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => setDailyVerseEnabled(!isDailyVerseEnabled)}
+            className={`w-10 h-5 rounded-full transition-colors relative shrink-0 ${
+              isDailyVerseEnabled ? "bg-accent" : "bg-background-card border border-border-subtle"
+            }`}
+            title="Toggle Daily Bible Verse Icon"
+          >
+            <span
+              className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow-sm transition-transform ${
+                isDailyVerseEnabled ? "right-0.5" : "left-0.5"
+              }`}
+            />
+          </button>
+        </div>
       </Card>
 
       {/* Database & System Integrity */}

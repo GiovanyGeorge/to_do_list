@@ -1,5 +1,5 @@
 import React from "react";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { HashRouter, Routes, Route, Navigate } from "react-router-dom";
 import { Shell } from "@/components/layout/Shell";
 import { DashboardPage } from "@/pages/DashboardPage";
 import { MyDayPage } from "@/pages/MyDayPage";
@@ -27,7 +27,9 @@ import { HabitTrackerWidget } from "@/components/widgets/HabitTrackerWidget";
 export const App: React.FC = () => {
   // Check if loaded inside an independent widget window via query parameter: ?widget=<type>
   const params = new URLSearchParams(window.location.search);
-  const widgetParam = params.get("widget");
+  const hash = window.location.hash;
+  const hashParams = new URLSearchParams(hash.includes("?") ? hash.split("?")[1] : "");
+  const widgetParam = params.get("widget") || hashParams.get("widget");
 
   if (widgetParam) {
     switch (widgetParam) {
@@ -61,7 +63,7 @@ export const App: React.FC = () => {
   }
 
   return (
-    <BrowserRouter>
+    <HashRouter>
       <Routes>
         <Route path="/" element={<Shell />}>
           <Route index element={<DashboardPage />} />
@@ -82,6 +84,6 @@ export const App: React.FC = () => {
         </Route>
       </Routes>
       <TaskDetailsModal />
-    </BrowserRouter>
+    </HashRouter>
   );
 };
