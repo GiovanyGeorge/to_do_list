@@ -4,34 +4,38 @@ import { Modal } from "../ui/Modal";
 import { Input, Textarea } from "../ui/Input";
 import { Select } from "../ui/Select";
 import { Button } from "../ui/Button";
+import { useTaskStore } from "@/store/useTaskStore";
+import type { Priority } from "@shared/types/database";
 
 interface QuickAddModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onAdd?: (task: { title: string; description: string; priority: string }) => void;
 }
 
 export const QuickAddModal: React.FC<QuickAddModalProps> = ({
   isOpen,
   onClose,
-  onAdd,
 }) => {
   const { t } = useTranslation();
+  const { createTask } = useTaskStore();
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
-  const [priority, setPriority] = useState("medium");
+  const [priority, setPriority] = useState<Priority>("medium");
   const [error, setError] = useState("");
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!title.trim()) {
       setError("Task title is required");
       return;
     }
 
-    if (onAdd) {
-      onAdd({ title: title.trim(), description: description.trim(), priority });
-    }
+    await createTask({
+      title: title.trim(),
+      description: description.trim() || undefined,
+      priority,
+      status: "todo",
+    });
 
     setTitle("");
     setDescription("");
@@ -72,7 +76,7 @@ export const QuickAddModal: React.FC<QuickAddModalProps> = ({
         <Select
           label="Priority"
           value={priority}
-          onChange={(e) => setPriority(e.target.value)}
+          onChange={(e) => setPriority(e.target.value as Priority)}
           options={[
             { value: "low", label: "Low Priority" },
             { value: "medium", label: "Medium Priority" },
