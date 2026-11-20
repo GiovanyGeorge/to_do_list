@@ -1,5 +1,5 @@
 import { contextBridge, ipcRenderer } from "electron";
-import type { ElectronAPI } from "../shared/types/ipc";
+import type { ElectronAPI, WidgetType } from "../shared/types/ipc";
 import type {
   CreateTaskInput,
   UpdateTaskInput,
@@ -133,6 +133,13 @@ const api: ElectronAPI = {
   // Analytics methods
   getAnalyticsSummary: (startDate: string, endDate: string) =>
     ipcRenderer.invoke("analytics:get-summary", startDate, endDate),
+
+  // Widget methods
+  openWidget: (type: WidgetType) => ipcRenderer.invoke("widgets:open", type),
+  closeWidget: (type: WidgetType) => ipcRenderer.invoke("widgets:close", type),
+  getWidgetStatus: () => ipcRenderer.invoke("widgets:get-status"),
+  setWidgetAlwaysOnTop: (type: WidgetType, flag: boolean) =>
+    ipcRenderer.invoke("widgets:set-always-on-top", type, flag),
 };
 
 contextBridge.exposeInMainWorld("electronAPI", api);

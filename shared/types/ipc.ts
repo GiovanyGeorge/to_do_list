@@ -24,6 +24,8 @@ export interface AppInfo {
   isPackaged: boolean;
 }
 
+export type WidgetType = "today_tasks" | "quick_add" | "pomodoro" | "habits";
+
 export interface ElectronAPI {
   getAppInfo: () => Promise<AppInfo>;
   minimizeWindow: () => Promise<void>;
@@ -123,6 +125,12 @@ export interface ElectronAPI {
 
   // Analytics API
   getAnalyticsSummary: (startDate: string, endDate: string) => Promise<AnalyticsSummary>;
+
+  // Widget API
+  openWidget: (type: WidgetType) => Promise<boolean>;
+  closeWidget: (type: WidgetType) => Promise<boolean>;
+  getWidgetStatus: () => Promise<Record<WidgetType, boolean>>;
+  setWidgetAlwaysOnTop: (type: WidgetType, flag: boolean) => Promise<boolean>;
 }
 
 declare global {

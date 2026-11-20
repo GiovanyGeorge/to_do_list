@@ -11,9 +11,17 @@ import { HabitsPage } from "@/pages/HabitsPage";
 import { GoalsPage } from "@/pages/GoalsPage";
 import { NotesPage } from "@/pages/NotesPage";
 import { AnalyticsPage } from "@/pages/AnalyticsPage";
+import { WidgetCenterPage } from "@/pages/WidgetCenterPage";
 import { TaskDetailsModal } from "@/components/tasks/TaskDetailsModal";
 
-// Placeholders for subsequent phases (Archive, Widgets, Settings)
+// Standalone widget imports
+import { StandaloneWidgetContainer } from "@/components/widgets/StandaloneWidgetContainer";
+import { TodayTasksWidget } from "@/components/widgets/TodayTasksWidget";
+import { QuickAddWidget } from "@/components/widgets/QuickAddWidget";
+import { PomodoroWidget } from "@/components/widgets/PomodoroWidget";
+import { HabitTrackerWidget } from "@/components/widgets/HabitTrackerWidget";
+
+// Placeholders for subsequent phases (Archive, Settings)
 const PlaceholderPage: React.FC<{ title: string }> = ({ title }) => (
   <div className="p-8 rounded-2xl bg-background-card border border-border-subtle text-center">
     <h2 className="text-xl font-bold text-text-primary mb-2">{title}</h2>
@@ -24,6 +32,41 @@ const PlaceholderPage: React.FC<{ title: string }> = ({ title }) => (
 );
 
 export const App: React.FC = () => {
+  // Check if loaded inside an independent widget window via query parameter: ?widget=<type>
+  const params = new URLSearchParams(window.location.search);
+  const widgetParam = params.get("widget");
+
+  if (widgetParam) {
+    switch (widgetParam) {
+      case "today_tasks":
+        return (
+          <StandaloneWidgetContainer title="Today's Tasks">
+            <TodayTasksWidget />
+          </StandaloneWidgetContainer>
+        );
+      case "quick_add":
+        return (
+          <StandaloneWidgetContainer title="Quick Add">
+            <QuickAddWidget />
+          </StandaloneWidgetContainer>
+        );
+      case "pomodoro":
+        return (
+          <StandaloneWidgetContainer title="Pomodoro Timer">
+            <PomodoroWidget />
+          </StandaloneWidgetContainer>
+        );
+      case "habits":
+        return (
+          <StandaloneWidgetContainer title="Habits Tracker">
+            <HabitTrackerWidget />
+          </StandaloneWidgetContainer>
+        );
+      default:
+        break;
+    }
+  }
+
   return (
     <BrowserRouter>
       <Routes>
@@ -38,8 +81,8 @@ export const App: React.FC = () => {
           <Route path="goals" element={<GoalsPage />} />
           <Route path="notes" element={<NotesPage />} />
           <Route path="analytics" element={<AnalyticsPage />} />
+          <Route path="widgets" element={<WidgetCenterPage />} />
           <Route path="archive" element={<PlaceholderPage title="Archive" />} />
-          <Route path="widgets" element={<PlaceholderPage title="Widget Center" />} />
           <Route path="settings" element={<PlaceholderPage title="Settings" />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Route>

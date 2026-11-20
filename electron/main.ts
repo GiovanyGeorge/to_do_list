@@ -20,6 +20,8 @@ import { NoteRepository } from "../database/repositories/noteRepository";
 import { registerNoteIpc } from "./ipc/noteIpc";
 import { AnalyticsRepository } from "../database/repositories/analyticsRepository";
 import { registerAnalyticsIpc } from "./ipc/analyticsIpc";
+import { WidgetWindowManager } from "./windows/widgetWindowManager";
+import { registerWidgetIpc } from "./ipc/widgetIpc";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -60,6 +62,14 @@ registerNoteIpc(noteRepo);
 
 const analyticsRepo = new AnalyticsRepository(db);
 registerAnalyticsIpc(analyticsRepo);
+
+const widgetManager = new WidgetWindowManager(
+  path.join(__dirname, "preload.js"),
+  process.env.VITE_DEV_SERVER_URL,
+  RENDERER_DIST,
+  reminderRepo
+);
+registerWidgetIpc(widgetManager);
 
 function createWindow() {
   mainWindow = new BrowserWindow({
