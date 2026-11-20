@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
-import { motion, AnimatePresence } from "motion/react";
+import { motion, AnimatePresence, Reorder } from "motion/react";
 import {
   Play,
   Pause,
@@ -11,6 +11,8 @@ import {
   Check,
   Trash2,
   Sparkles,
+  GripVertical,
+  ListTree,
 } from "lucide-react";
 import { useTaskStore } from "@/store/useTaskStore";
 import { useSoundManager } from "@/hooks/useSoundManager";
@@ -18,8 +20,16 @@ import { useMotion } from "@/hooks/useMotion";
 import type { TaskWithDetails, Priority } from "@shared/types/database";
 
 export const DashboardPage: React.FC = () => {
-  const { tasks, fetchTasks, toggleTask, deleteTask, createTask, setSelectedTaskId } =
-    useTaskStore();
+  const {
+    tasks,
+    fetchTasks,
+    toggleTask,
+    deleteTask,
+    createTask,
+    setSelectedTaskId,
+    reorderTasks,
+    toggleSubtask,
+  } = useTaskStore();
   const { playSound } = useSoundManager();
   const { enabled: motionEnabled } = useMotion();
 
@@ -137,6 +147,10 @@ export const DashboardPage: React.FC = () => {
     e.stopPropagation();
     await deleteTask(id);
     playSound("delete");
+  };
+
+  const handleReorderTodayTasks = (newOrdered: TaskWithDetails[]) => {
+    reorderTasks(newOrdered.map((t) => t.id));
   };
 
   // Calendar logic
@@ -509,8 +523,8 @@ export const DashboardPage: React.FC = () => {
           )}
         </AnimatePresence>
 
-        {/* Task Rows List */}
-        <div className="flex-1 space-y-2.5 overflow-y-auto max-h-64 pr-1">
+        {/* Task Rows List with Drag & Drop and Subtasks */}
+        <div className="flex-1 overflow-y-auto max-h-72 pr-1">
           {todayTasks.length === 0 ? (
             <div className="py-10 flex flex-col items-center justify-center text-center">
               <div className="w-10 h-10 rounded-full bg-[#F0EAE0] flex items-center justify-center text-[#78716C] mb-2">
@@ -521,86 +535,162 @@ export const DashboardPage: React.FC = () => {
               </p>
             </div>
           ) : (
-            todayTasks.map((task) => {
-              const isCompleted = task.status === "done";
-              const priorityDot =
-                task.priority === "urgent" || task.priority === "high"
-                  ? "bg-[#B91C1C]"
-                  : task.priority === "medium"
-                  ? "bg-[#C2410C]"
-                  : "bg-[#15803D]";
+            <Reorder.Group
+              axis="y"
+              values={todayTasks}
+              onReorder={handleReorderTodayTasks}
+              className="space-y-2.5"
+            >
+              {todayTasks.map((task) => {
+                const isCompleted = task.status === "done";
+                const priorityDot =
+                  task.priority === "urgent" || task.priority === "high"
+                    ? "bg-[#B91C1C]"
+                    : task.priority === "medium"
+                    ? "bg-[#C2410C]"
+                    : "bg-[#15803D]";
 
-              let timeFormatted = "09:00 AM";
-              if (task.due_at) {
-                try {
-                  timeFormatted = new Date(task.due_at).toLocaleTimeString([], {
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  });
-                } catch {}
-              }
+                let timeFormatted = "09:00 AM";
+                if (task.due_at) {
+                  try {
+                    timeFormatted = new Date(task.due_at).toLocaleTimeString([], {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    });
+                  } catch {}
+                }
 
-              return (
-                <div
-                  key={task.id}
-                  onClick={() => setSelectedTaskId(task.id)}
-                  className="flex items-center justify-between px-3.5 py-3 rounded-xl bg-[#FAF7F2] hover:bg-[#F0EAE0] border border-[rgba(28,25,23,0.06)] hover:border-[rgba(28,25,23,0.14)] transition-all cursor-pointer group"
-                >
-                  <div className="flex items-center gap-3 min-w-0">
-                    {/* Circle Checkbox */}
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleToggle(task);
-                      }}
-                      aria-label={isCompleted ? "Mark incomplete" : "Mark complete"}
-                      className={`w-5 h-5 rounded-full flex items-center justify-center transition-all ${
-                        isCompleted
-                          ? "bg-[#C2410C] text-[#FFFBEB] shadow-sm"
-                          : "border-2 border-[rgba(28,25,23,0.25)] hover:border-[#C2410C]"
-                      }`}
+                const completedSubs =
+                  task.subtasks?.filter((s) => s.completed === 1).length || 0;
+                const totalSubs = task.subtasks?.length || 0;
+
+                return (
+                  <Reorder.Item key={task.id} value={task}>
+                    <div
+                      onClick={() => setSelectedTaskId(task.id)}
+                      className="flex flex-col p-3 rounded-xl bg-[#FAF7F2] hover:bg-[#F0EAE0] border border-[rgba(28,25,23,0.06)] hover:border-[rgba(28,25,23,0.14)] transition-all cursor-pointer group shadow-[0_1px_2px_rgba(28,25,23,0.02)]"
                     >
-                      {isCompleted && <Check className="w-3 h-3 stroke-[3]" />}
-                    </button>
+                      {/* Top Row: Drag handle, Checkbox, Title, and Right Meta */}
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                          {/* Drag handle */}
+                          <div
+                            onClick={(e) => e.stopPropagation()}
+                            className="opacity-0 group-hover:opacity-40 hover:!opacity-100 transition-opacity cursor-grab active:cursor-grabbing text-[#78716C] shrink-0 -ml-1 p-0.5"
+                            title="Drag to reorder"
+                          >
+                            <GripVertical className="w-3.5 h-3.5" />
+                          </div>
 
-                    {/* Title */}
-                    <span
-                      className={`text-sm truncate font-medium ${
-                        isCompleted
-                          ? "line-through text-[#78716C] opacity-60"
-                          : "text-[#1C1917]"
-                      }`}
-                    >
-                      {task.title}
-                    </span>
-                  </div>
+                          {/* Circle Checkbox */}
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleToggle(task);
+                            }}
+                            aria-label={isCompleted ? "Mark incomplete" : "Mark complete"}
+                            className={`w-5 h-5 rounded-full flex items-center justify-center transition-all shrink-0 ${
+                              isCompleted
+                                ? "bg-[#C2410C] text-[#FFFBEB] shadow-sm"
+                                : "border-2 border-[rgba(28,25,23,0.25)] hover:border-[#C2410C] bg-white"
+                            }`}
+                          >
+                            {isCompleted && <Check className="w-3 h-3 stroke-[3]" />}
+                          </button>
 
-                  {/* Right metadata: Time, Delete button, Priority dot */}
-                  <div className="flex items-center gap-3 shrink-0 ml-3">
-                    <div className="flex items-center gap-1 text-xs text-[#78716C] font-mono">
-                      <Clock className="w-3 h-3" />
-                      <span>{timeFormatted}</span>
+                          {/* Title */}
+                          <span
+                            className={`text-sm truncate font-medium ${
+                              isCompleted
+                                ? "line-through text-[#78716C] opacity-60"
+                                : "text-[#1C1917]"
+                            }`}
+                          >
+                            {task.title}
+                          </span>
+
+                          {/* Subtask count badge if any */}
+                          {totalSubs > 0 && (
+                            <span className="inline-flex items-center gap-1 text-[10px] font-mono font-medium px-2 py-0.5 rounded-full bg-white/80 border border-[rgba(28,25,23,0.08)] text-[#78716C] shrink-0">
+                              <ListTree className="w-3 h-3 text-[#C2410C]" />
+                              <span>
+                                {completedSubs}/{totalSubs}
+                              </span>
+                            </span>
+                          )}
+                        </div>
+
+                        {/* Right metadata: Time, Delete button, Priority dot */}
+                        <div className="flex items-center gap-2.5 shrink-0 ml-3">
+                          <div className="flex items-center gap-1 text-xs text-[#78716C] font-mono">
+                            <Clock className="w-3 h-3" />
+                            <span>{timeFormatted}</span>
+                          </div>
+
+                          {/* Delete hover icon */}
+                          <button
+                            onClick={(e) => handleDelete(e, task.id)}
+                            title="Delete task"
+                            aria-label="Delete task"
+                            className="opacity-0 group-hover:opacity-100 text-[#78716C] hover:text-[#B91C1C] transition-opacity p-1"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+
+                          {/* Priority Dot */}
+                          <span
+                            className={`w-2 h-2 rounded-full shrink-0 ${priorityDot}`}
+                            title={`Priority: ${task.priority}`}
+                          />
+                        </div>
+                      </div>
+
+                      {/* Nested Subtasks List */}
+                      {task.subtasks && task.subtasks.length > 0 && (
+                        <div className="mt-2.5 pt-2 border-t border-[rgba(28,25,23,0.08)] space-y-1.5 pl-6 rtl:pl-0 rtl:pr-6">
+                          {task.subtasks.map((st) => (
+                            <div
+                              key={st.id}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                toggleSubtask(task.id, st.id);
+                              }}
+                              className="flex items-center gap-2 text-xs py-0.5 group/sub cursor-pointer"
+                            >
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  toggleSubtask(task.id, st.id);
+                                }}
+                                className={`w-3.5 h-3.5 rounded-full flex items-center justify-center border transition-all shrink-0 ${
+                                  st.completed === 1
+                                    ? "bg-[#C2410C] border-[#C2410C] text-white"
+                                    : "border-[rgba(28,25,23,0.3)] bg-white group-hover/sub:border-[#C2410C]"
+                                }`}
+                              >
+                                {st.completed === 1 && (
+                                  <Check className="w-2.5 h-2.5 stroke-[3]" />
+                                )}
+                              </button>
+                              <span
+                                className={`truncate transition-all ${
+                                  st.completed === 1
+                                    ? "line-through text-[#78716C] opacity-60"
+                                    : "text-[#1C1917] font-normal"
+                                }`}
+                              >
+                                {st.title}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
                     </div>
-
-                    {/* Delete hover icon */}
-                    <button
-                      onClick={(e) => handleDelete(e, task.id)}
-                      title="Delete task"
-                      aria-label="Delete task"
-                      className="opacity-0 group-hover:opacity-100 text-[#78716C] hover:text-[#B91C1C] transition-opacity p-1"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
-
-                    {/* Priority Dot */}
-                    <span
-                      className={`w-2 h-2 rounded-full shrink-0 ${priorityDot}`}
-                      title={`Priority: ${task.priority}`}
-                    />
-                  </div>
-                </div>
-              );
-            })
+                  </Reorder.Item>
+                );
+              })}
+            </Reorder.Group>
           )}
         </div>
       </motion.div>
