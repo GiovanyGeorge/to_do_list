@@ -1,16 +1,13 @@
 import { app, BrowserWindow, ipcMain } from "electron";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { initDatabase, closeDatabase } from "../database/connection";
+import { runMigrations } from "../database/migrator";
+import { TaskRepository } from "../database/repositories/taskRepository";
+import { TaskService } from "./services/taskService";
+import { registerTaskIpc } from "./ipc/taskIpc";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-
-// The built directory structure:
-//
-// ├─┬ dist-electron
-// │ ├── main.js
-// │ └── preload.mjs / preload.js
-// ├─┬ dist
-// │ └── index.html
 
 process.env.APP_ROOT = path.join(__dirname, "..");
 export const MAIN_DIST = path.join(process.env.APP_ROOT, "dist-electron");
@@ -21,6 +18,13 @@ process.env.VITE_PUBLIC = process.env.VITE_DEV_SERVER_URL
   : RENDERER_DIST;
 
 let mainWindow: BrowserWindow | null = null;
+
+// Initialize Database & Services
+const db = initDatabase();
+runMigrations(db);
+const taskRepo = new TaskRepository(db);
+const taskService = new TaskService(taskRepo);
+registerTaskIpc(taskService);
 
 function createWindow() {
   mainWindow = new BrowserWindow({
@@ -96,6 +100,7 @@ app.whenReady().then(() => {
 });
 
 app.on("window-all-closed", () => {
+  closeDatabase();
   if (process.platform !== "darwin") {
     app.quit();
   }
