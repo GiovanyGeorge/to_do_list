@@ -1,6 +1,20 @@
 import { BrowserWindow } from "electron";
 import path from "node:path";
+import fs from "node:fs";
 import { ReminderRepository } from "../../database/repositories/reminderRepository";
+
+function getWidgetIconPath(preloadPath: string): string | undefined {
+  const candidates = [
+    path.join(process.resourcesPath || "", "resources", "icon.ico"),
+    path.join(process.resourcesPath || "", "icon.ico"),
+    path.join(path.dirname(preloadPath), "..", "resources", "icon.ico"),
+    path.join(process.cwd(), "resources", "icon.ico"),
+  ];
+  for (const c of candidates) {
+    if (c && fs.existsSync(c)) return c;
+  }
+  return undefined;
+}
 
 export type WidgetType = "today_tasks" | "quick_add" | "pomodoro" | "habits";
 
@@ -68,6 +82,7 @@ export class WidgetWindowManager {
 
     const config = WIDGET_CONFIGS[type];
     const savedPos = this.loadPosition(type);
+    const appIconPath = getWidgetIconPath(this.preloadPath);
 
     const win = new BrowserWindow({
       title: config.title,
@@ -81,6 +96,7 @@ export class WidgetWindowManager {
       frame: false,
       alwaysOnTop: true,
       skipTaskbar: false,
+      icon: appIconPath,
       webPreferences: {
         preload: this.preloadPath,
         contextIsolation: true,

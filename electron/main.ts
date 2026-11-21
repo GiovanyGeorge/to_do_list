@@ -1,10 +1,12 @@
-import { app, BrowserWindow, ipcMain } from "electron";
+import { app, BrowserWindow, ipcMain, Tray, Menu, nativeImage } from "electron";
 import path from "node:path";
 import fs from "node:fs";
 import { fileURLToPath } from "node:url";
 
 // Disable hardware acceleration fallback for maximum Windows desktop compatibility
-app.disableHardwareAcceleration();
+if (app?.disableHardwareAcceleration) {
+  app.disableHardwareAcceleration();
+}
 
 // Error logging helper
 process.on("uncaughtException", (err) => {
@@ -58,7 +60,76 @@ process.env.VITE_PUBLIC = process.env.VITE_DEV_SERVER_URL
   : RENDERER_DIST;
 
 let mainWindow: BrowserWindow | null = null;
+let appTray: Tray | null = null;
 let notificationServiceInstance: NotificationService | null = null;
+
+export function getResourcePath(relativePath: string): string {
+  const candidates = [
+    path.join(process.resourcesPath, "resources", relativePath),
+    path.join(process.resourcesPath, relativePath),
+    path.join(process.env.APP_ROOT || path.join(__dirname, ".."), "resources", relativePath),
+    path.join(__dirname, "..", "resources", relativePath),
+  ];
+  for (const candidate of candidates) {
+    if (fs.existsSync(candidate)) {
+      return candidate;
+    }
+  }
+  return path.join(process.env.APP_ROOT || path.join(__dirname, ".."), "resources", relativePath);
+}
+
+function createTray() {
+  try {
+    const trayIconPath = getResourcePath("tray-icon.png");
+    if (!fs.existsSync(trayIconPath)) {
+      return;
+    }
+    const icon = nativeImage.createFromPath(trayIconPath);
+    appTray = new Tray(icon);
+    appTray.setToolTip("LifeFlow — Daily Productivity & Focus");
+
+    const contextMenu = Menu.buildFromTemplate([
+      {
+        label: "Open LifeFlow",
+        click: () => {
+          if (mainWindow) {
+            if (mainWindow.isMinimized()) mainWindow.restore();
+            mainWindow.show();
+            mainWindow.focus();
+          }
+        },
+      },
+      { type: "separator" },
+      {
+        label: "Quit LifeFlow",
+        click: () => {
+          app.quit();
+        },
+      },
+    ]);
+
+    appTray.setContextMenu(contextMenu);
+    appTray.on("double-click", () => {
+      if (mainWindow) {
+        if (mainWindow.isMinimized()) mainWindow.restore();
+        mainWindow.show();
+        mainWindow.focus();
+      }
+    });
+    appTray.on("click", () => {
+      if (mainWindow) {
+        if (mainWindow.isMinimized()) mainWindow.restore();
+        mainWindow.show();
+        mainWindow.focus();
+      }
+    });
+  } catch (err) {
+    fs.appendFileSync(
+      "lifeflow-error.log",
+      `[${new Date().toISOString()}] Tray error: ${(err as Error).stack || err}\n`
+    );
+  }
+}
 
 function initServices() {
   const dbPath = getDatabasePath();
@@ -111,6 +182,8 @@ function initServices() {
 }
 
 function createWindow() {
+  const appIconPath = getResourcePath("icon.ico");
+
   mainWindow = new BrowserWindow({
     width: 1280,
     height: 800,
@@ -120,6 +193,7 @@ function createWindow() {
     frame: false,
     titleBarStyle: "hidden",
     title: "LifeFlow",
+    icon: fs.existsSync(appIconPath) ? appIconPath : undefined,
     webPreferences: {
       preload: path.join(__dirname, "preload.js"),
       contextIsolation: true,
@@ -181,6 +255,7 @@ app.whenReady().then(() => {
   try {
     initServices();
     createWindow();
+    createTray();
     notificationServiceInstance?.initializeScheduler();
   } catch (err: unknown) {
     fs.appendFileSync("lifeflow-error.log", `[${new Date().toISOString()}] whenReady error: ${(err as Error).stack || err}\n`);
