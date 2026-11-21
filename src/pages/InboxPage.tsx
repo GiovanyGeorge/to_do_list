@@ -7,6 +7,7 @@ import { TaskItem } from "@/components/tasks/TaskItem";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import type { TaskWithDetails } from "@shared/types/database";
+import { getTodayLocalDateString } from "@/lib/dateUtils";
 
 export const InboxPage: React.FC = () => {
   const { t } = useTranslation();
@@ -22,7 +23,7 @@ export const InboxPage: React.FC = () => {
   } = useTaskStore();
 
   const [title, setTitle] = useState("");
-  const todayStr = new Date().toISOString().substring(0, 10);
+  const todayStr = getTodayLocalDateString();
 
   useEffect(() => {
     fetchTasks();

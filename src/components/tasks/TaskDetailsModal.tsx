@@ -18,6 +18,11 @@ import {
 } from "lucide-react";
 import { Reorder } from "motion/react";
 import type { Priority, TaskStatus } from "@shared/types/database";
+import {
+  extractLocalDate,
+  extractLocalTime,
+  createDateTimeISO,
+} from "@/lib/dateUtils";
 
 export const TaskDetailsModal: React.FC = () => {
   const {
@@ -60,19 +65,12 @@ export const TaskDetailsModal: React.FC = () => {
       setStatus(task.status);
       setPriority(task.priority);
       setCategoryId(task.category_id || "");
-      setPlanDate(task.start_at ? task.start_at.substring(0, 10) : "");
+      setPlanDate(extractLocalDate(task.start_at));
       setRecurrence(task.recurrence_rule || "");
 
       if (task.due_at) {
-        setDueDate(task.due_at.substring(0, 10));
-        try {
-          const d = new Date(task.due_at);
-          const hh = String(d.getHours()).padStart(2, "0");
-          const mm = String(d.getMinutes()).padStart(2, "0");
-          setDueTime(`${hh}:${mm}`);
-        } catch {
-          setDueTime("19:00");
-        }
+        setDueDate(extractLocalDate(task.due_at));
+        setDueTime(extractLocalTime(task.due_at));
       } else {
         setDueDate("");
         setDueTime("19:00");
@@ -80,15 +78,12 @@ export const TaskDetailsModal: React.FC = () => {
 
       if (task.reminder_at) {
         setReminderPreset("custom");
-        try {
-          const rDate = new Date(task.reminder_at);
-          const yr = rDate.getFullYear();
-          const mo = String(rDate.getMonth() + 1).padStart(2, "0");
-          const da = String(rDate.getDate()).padStart(2, "0");
-          const hh = String(rDate.getHours()).padStart(2, "0");
-          const mm = String(rDate.getMinutes()).padStart(2, "0");
-          setCustomReminder(`${yr}-${mo}-${da}T${hh}:${mm}`);
-        } catch {
+        const rDate = new Date(task.reminder_at);
+        if (!isNaN(rDate.getTime())) {
+          const rDateStr = extractLocalDate(task.reminder_at);
+          const rTimeStr = extractLocalTime(task.reminder_at);
+          setCustomReminder(`${rDateStr}T${rTimeStr}`);
+        } else {
           setCustomReminder("");
         }
       } else {
@@ -101,16 +96,14 @@ export const TaskDetailsModal: React.FC = () => {
   if (!task) return null;
 
   const handleSave = () => {
-    // Calculate due_at
+    // Calculate due_at in user's local timezone
     let dueAtISO: string | null = null;
     if (dueDate) {
       const [hh, mm] = dueTime.includes(":") ? dueTime.split(":") : ["19", "00"];
-      const d = new Date(`${dueDate}T00:00:00`);
-      d.setHours(parseInt(hh, 10) || 0, parseInt(mm, 10) || 0, 0, 0);
-      dueAtISO = !isNaN(d.getTime()) ? d.toISOString() : new Date(dueDate).toISOString();
+      dueAtISO = createDateTimeISO(dueDate, `${hh}:${mm}`);
     }
 
-    // Calculate reminder_at
+    // Calculate reminder_at in user's local timezone
     let reminderAtISO: string | null = null;
     if (reminderPreset === "at_due" && dueAtISO) {
       reminderAtISO = dueAtISO;
@@ -125,9 +118,9 @@ export const TaskDetailsModal: React.FC = () => {
     } else if (reminderPreset === "1d" && dueAtISO) {
       reminderAtISO = new Date(new Date(dueAtISO).getTime() - 24 * 60 * 60 * 1000).toISOString();
     } else if (reminderPreset === "custom" && customReminder) {
-      const cDate = new Date(customReminder);
-      if (!isNaN(cDate.getTime())) {
-        reminderAtISO = cDate.toISOString();
+      const [cDate, cTime] = customReminder.split("T");
+      if (cDate && cTime) {
+        reminderAtISO = createDateTimeISO(cDate, cTime);
       }
     }
 
@@ -138,7 +131,7 @@ export const TaskDetailsModal: React.FC = () => {
       priority,
       category_id: categoryId || null,
       due_at: dueAtISO,
-      start_at: planDate ? new Date(`${planDate}T00:00:00`).toISOString() : null,
+      start_at: planDate ? planDate : null,
       recurrence_rule: recurrence || null,
       reminder_at: reminderAtISO,
     });

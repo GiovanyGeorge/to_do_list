@@ -8,6 +8,7 @@ import {
   Sparkles,
 } from "lucide-react";
 import type { AnalyticsSummary } from "@shared/types/database";
+import { getTodayLocalDateString, extractLocalDate } from "@/lib/dateUtils";
 
 export const AnalyticsPage: React.FC = () => {
   const { t } = useTranslation();
@@ -17,7 +18,7 @@ export const AnalyticsPage: React.FC = () => {
   useEffect(() => {
     const fetchAnalytics = async () => {
       const now = new Date();
-      const endStr = now.toISOString().substring(0, 10);
+      const endStr = getTodayLocalDateString();
       let start = new Date();
 
       if (range === "7d") {
@@ -28,7 +29,7 @@ export const AnalyticsPage: React.FC = () => {
         start = new Date(now.getFullYear(), now.getMonth(), 1);
       }
 
-      const startStr = start.toISOString().substring(0, 10);
+      const startStr = extractLocalDate(start);
 
       if (window.electronAPI?.getAnalyticsSummary) {
         const res = await window.electronAPI.getAnalyticsSummary(startStr, endStr);

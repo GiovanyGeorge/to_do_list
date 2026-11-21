@@ -207,7 +207,7 @@ export class TaskRepository {
     }
 
     if (filters?.due_date) {
-      sql += " AND date(t.due_at) = date(?)";
+      sql += " AND date(t.due_at, 'localtime') = date(?)";
       params.push(filters.due_date);
     }
 

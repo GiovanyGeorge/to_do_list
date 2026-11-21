@@ -1,17 +1,21 @@
 import React, { useEffect } from "react";
 import { useTaskStore } from "@/store/useTaskStore";
 import { Check } from "lucide-react";
+import { getTodayLocalDateString, extractLocalDate } from "@/lib/dateUtils";
 
 export const TodayTasksWidget: React.FC = () => {
   const { tasks, fetchTasks, toggleTask } = useTaskStore();
-  const todayStr = new Date().toISOString().substring(0, 10);
+  const todayStr = getTodayLocalDateString();
 
   useEffect(() => {
     fetchTasks();
   }, [fetchTasks]);
 
   const todayTasks = tasks.filter(
-    (t) => t.is_in_my_day || (t.due_at && t.due_at.substring(0, 10) === todayStr)
+    (t) =>
+      t.is_in_my_day ||
+      extractLocalDate(t.start_at) === todayStr ||
+      extractLocalDate(t.due_at) === todayStr
   );
 
   const completed = todayTasks.filter((t) => t.status === "done").length;

@@ -12,6 +12,7 @@ import { useTaskStore } from "@/store/useTaskStore";
 import { useCategoryStore } from "@/store/useCategoryStore";
 import { TaskItem } from "@/components/tasks/TaskItem";
 import type { TaskStatus, TaskWithDetails } from "@shared/types/database";
+import { getTodayLocalDateString } from "@/lib/dateUtils";
 
 export const AllTasksPage: React.FC = () => {
   const { t } = useTranslation();
@@ -33,7 +34,7 @@ export const AllTasksPage: React.FC = () => {
   const [priorityFilter, setPriorityFilter] = useState<string>("all");
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
 
-  const todayStr = new Date().toISOString().substring(0, 10);
+  const todayStr = getTodayLocalDateString();
 
   useEffect(() => {
     fetchTasks();

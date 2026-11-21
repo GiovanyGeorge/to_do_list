@@ -13,6 +13,7 @@ import { useHabitStore } from "@/store/useHabitStore";
 import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
 import { Input, Textarea } from "@/components/ui/Input";
+import { getTodayLocalDateString } from "@/lib/dateUtils";
 import { Select } from "@/components/ui/Select";
 import {
   STARTER_HABIT_LIBRARY,
@@ -47,7 +48,7 @@ export const HabitsPage: React.FC = () => {
   const [librarySearch, setLibrarySearch] = useState("");
   const [addedLibraryIds, setAddedLibraryIds] = useState<Set<string>>(new Set());
 
-  const todayStr = new Date().toISOString().substring(0, 10);
+  const todayStr = getTodayLocalDateString();
 
   useEffect(() => {
     fetchHabits();

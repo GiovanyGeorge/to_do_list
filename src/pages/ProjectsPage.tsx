@@ -6,6 +6,7 @@ import { useTaskStore } from "@/store/useTaskStore";
 import { TaskItem } from "@/components/tasks/TaskItem";
 import { Button } from "@/components/ui/Button";
 import { CreateProjectModal } from "@/components/projects/CreateProjectModal";
+import { getTodayLocalDateString } from "@/lib/dateUtils";
 
 export const ProjectsPage: React.FC = () => {
   const { t } = useTranslation();
@@ -15,7 +16,7 @@ export const ProjectsPage: React.FC = () => {
     useTaskStore();
 
   const [isCreateOpen, setIsCreateOpen] = useState(false);
-  const todayStr = new Date().toISOString().substring(0, 10);
+  const todayStr = getTodayLocalDateString();
 
   useEffect(() => {
     fetchProjects();

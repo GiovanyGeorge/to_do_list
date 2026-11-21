@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useTaskStore } from "@/store/useTaskStore";
 import { Plus } from "lucide-react";
+import { getTodayLocalDateString } from "@/lib/dateUtils";
 
 export const QuickAddWidget: React.FC = () => {
   const { createTask } = useTaskStore();
@@ -12,11 +13,13 @@ export const QuickAddWidget: React.FC = () => {
     e.preventDefault();
     if (!title.trim()) return;
 
+    const todayStr = getTodayLocalDateString();
     await createTask({
       title: title.trim(),
       priority,
       status: "todo",
-      plan_date: new Date().toISOString().substring(0, 10),
+      plan_date: todayStr,
+      start_at: todayStr,
     });
 
     setTitle("");

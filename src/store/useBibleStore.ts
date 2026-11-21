@@ -3,6 +3,7 @@ import type {
   DailyVerseWithDetails,
   BibleFavoriteWithVerse,
 } from "../../shared/types/database";
+import { getTodayLocalDateString } from "@/lib/dateUtils";
 
 interface BibleStoreState {
   dailyVerse: DailyVerseWithDetails | null;
@@ -42,7 +43,7 @@ const mockDailyVerse: DailyVerseWithDetails = {
   book_abbr_ar: "يو",
   book_abbr_en: "John",
   testament: "new",
-  date: new Date().toISOString().substring(0, 10),
+  date: getTodayLocalDateString(),
   is_favorite: false,
 };
 

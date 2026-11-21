@@ -1,10 +1,11 @@
 import React, { useEffect } from "react";
 import { useHabitStore } from "@/store/useHabitStore";
 import { Flame, Check } from "lucide-react";
+import { getTodayLocalDateString } from "@/lib/dateUtils";
 
 export const HabitTrackerWidget: React.FC = () => {
   const { habits, fetchHabits, toggleHabitLog } = useHabitStore();
-  const todayStr = new Date().toISOString().substring(0, 10);
+  const todayStr = getTodayLocalDateString();
 
   useEffect(() => {
     fetchHabits();

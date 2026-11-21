@@ -19,6 +19,11 @@ import { useTaskStore } from "@/store/useTaskStore";
 import { useSoundManager } from "@/hooks/useSoundManager";
 import { useMotion } from "@/hooks/useMotion";
 import type { TaskWithDetails, Priority } from "@shared/types/database";
+import {
+  getTodayLocalDateString,
+  extractLocalDate,
+  createDateTimeISO,
+} from "@/lib/dateUtils";
 
 export const DashboardPage: React.FC = () => {
   const {
@@ -48,9 +53,9 @@ export const DashboardPage: React.FC = () => {
   const [newCustomReminder, setNewCustomReminder] = useState("");
 
   // Calendar State
-  const [calendarDate, setCalendarDate] = useState(new Date());
-  const [selectedDate, setSelectedDate] = useState<string>(
-    new Date().toISOString().substring(0, 10)
+  const [calendarDate, setCalendarDate] = useState(() => new Date());
+  const [selectedDate, setSelectedDate] = useState<string>(() =>
+    getTodayLocalDateString()
   );
 
   useEffect(() => {
@@ -103,13 +108,14 @@ export const DashboardPage: React.FC = () => {
     return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
   };
 
-  const todayStr = new Date().toISOString().substring(0, 10);
+  const todayStr = getTodayLocalDateString();
 
   // Today's tasks (in my day or scheduled for today)
   const todayTasks = useMemo(() => {
     return tasks.filter((t) => {
       if (t.is_in_my_day) return true;
-      if (t.due_at && t.due_at.substring(0, 10) === todayStr) return true;
+      if (extractLocalDate(t.start_at) === todayStr) return true;
+      if (extractLocalDate(t.due_at) === todayStr) return true;
       return false;
     });
   }, [tasks, todayStr]);
@@ -128,38 +134,32 @@ export const DashboardPage: React.FC = () => {
     const hours = parseInt(timeParts[0], 10) || 0;
     const minutes = parseInt(timeParts[1], 10) || 0;
 
-    const dueDateTime = new Date(`${todayStr}T00:00:00`);
-    dueDateTime.setHours(hours, minutes, 0, 0);
-    const dueAtISO = !isNaN(dueDateTime.getTime()) ? dueDateTime.toISOString() : `${todayStr}T19:00:00Z`;
+    const dueAtISO = createDateTimeISO(todayStr, `${hours}:${minutes}`);
 
     // Compute Reminder Time
     let reminderAtISO: string | undefined = undefined;
     if (newReminder === "at_time") {
       reminderAtISO = dueAtISO;
-    } else if (newReminder === "5m" && !isNaN(dueDateTime.getTime())) {
-      reminderAtISO = new Date(dueDateTime.getTime() - 5 * 60 * 1000).toISOString();
-    } else if (newReminder === "15m" && !isNaN(dueDateTime.getTime())) {
-      reminderAtISO = new Date(dueDateTime.getTime() - 15 * 60 * 1000).toISOString();
-    } else if (newReminder === "30m" && !isNaN(dueDateTime.getTime())) {
-      reminderAtISO = new Date(dueDateTime.getTime() - 30 * 60 * 1000).toISOString();
-    } else if (newReminder === "1h" && !isNaN(dueDateTime.getTime())) {
-      reminderAtISO = new Date(dueDateTime.getTime() - 60 * 60 * 1000).toISOString();
+    } else if (newReminder === "5m") {
+      reminderAtISO = new Date(new Date(dueAtISO).getTime() - 5 * 60 * 1000).toISOString();
+    } else if (newReminder === "15m") {
+      reminderAtISO = new Date(new Date(dueAtISO).getTime() - 15 * 60 * 1000).toISOString();
+    } else if (newReminder === "30m") {
+      reminderAtISO = new Date(new Date(dueAtISO).getTime() - 30 * 60 * 1000).toISOString();
+    } else if (newReminder === "1h") {
+      reminderAtISO = new Date(new Date(dueAtISO).getTime() - 60 * 60 * 1000).toISOString();
     } else if (newReminder === "custom" && newCustomReminder) {
       const cParts = newCustomReminder.split(":");
       const cHours = parseInt(cParts[0], 10) || 0;
       const cMinutes = parseInt(cParts[1], 10) || 0;
-      const cDate = new Date(`${todayStr}T00:00:00`);
-      cDate.setHours(cHours, cMinutes, 0, 0);
-      if (!isNaN(cDate.getTime())) {
-        reminderAtISO = cDate.toISOString();
-      }
+      reminderAtISO = createDateTimeISO(todayStr, `${cHours}:${cMinutes}`);
     }
 
     await createTask({
       title: newTitle.trim(),
       priority: newPriority,
       status: "todo",
-      start_at: `${todayStr}T00:00:00Z`,
+      start_at: todayStr,
       due_at: dueAtISO,
       reminder_at: reminderAtISO,
       plan_date: todayStr,
@@ -238,7 +238,10 @@ export const DashboardPage: React.FC = () => {
   const taskDatesMap = useMemo(() => {
     const map = new Set<string>();
     tasks.forEach((t) => {
-      if (t.due_at) map.add(t.due_at.substring(0, 10));
+      const planned = extractLocalDate(t.start_at);
+      if (planned) map.add(planned);
+      const due = extractLocalDate(t.due_at);
+      if (due) map.add(due);
     });
     return map;
   }, [tasks]);
@@ -248,7 +251,7 @@ export const DashboardPage: React.FC = () => {
   const handleSelectToday = () => {
     const now = new Date();
     setCalendarDate(now);
-    setSelectedDate(now.toISOString().substring(0, 10));
+    setSelectedDate(getTodayLocalDateString());
   };
 
   return (

@@ -6,6 +6,7 @@ import { Select } from "../ui/Select";
 import { Button } from "../ui/Button";
 import { useTaskStore } from "@/store/useTaskStore";
 import { useCategoryStore } from "@/store/useCategoryStore";
+import { createDateTimeISO } from "@/lib/dateUtils";
 import type { Priority } from "@shared/types/database";
 import { Calendar, Sun, Clock } from "lucide-react";
 
@@ -50,20 +51,18 @@ export const QuickAddModal: React.FC<QuickAddModalProps> = ({
 
     if (dueDate) {
       const [hh, mm] = dueTime.includes(":") ? dueTime.split(":") : ["19", "00"];
-      const d = new Date(`${dueDate}T00:00:00`);
-      d.setHours(parseInt(hh, 10) || 0, parseInt(mm, 10) || 0, 0, 0);
-      dueAtISO = !isNaN(d.getTime()) ? d.toISOString() : new Date(dueDate).toISOString();
+      dueAtISO = createDateTimeISO(dueDate, `${hh}:${mm}`);
 
       if (reminder === "at_due") {
         reminderAtISO = dueAtISO;
-      } else if (reminder === "5m" && !isNaN(d.getTime())) {
-        reminderAtISO = new Date(d.getTime() - 5 * 60 * 1000).toISOString();
-      } else if (reminder === "15m" && !isNaN(d.getTime())) {
-        reminderAtISO = new Date(d.getTime() - 15 * 60 * 1000).toISOString();
-      } else if (reminder === "30m" && !isNaN(d.getTime())) {
-        reminderAtISO = new Date(d.getTime() - 30 * 60 * 1000).toISOString();
-      } else if (reminder === "1h" && !isNaN(d.getTime())) {
-        reminderAtISO = new Date(d.getTime() - 60 * 60 * 1000).toISOString();
+      } else if (reminder === "5m") {
+        reminderAtISO = new Date(new Date(dueAtISO).getTime() - 5 * 60 * 1000).toISOString();
+      } else if (reminder === "15m") {
+        reminderAtISO = new Date(new Date(dueAtISO).getTime() - 15 * 60 * 1000).toISOString();
+      } else if (reminder === "30m") {
+        reminderAtISO = new Date(new Date(dueAtISO).getTime() - 30 * 60 * 1000).toISOString();
+      } else if (reminder === "1h") {
+        reminderAtISO = new Date(new Date(dueAtISO).getTime() - 60 * 60 * 1000).toISOString();
       }
     }
 
@@ -74,7 +73,7 @@ export const QuickAddModal: React.FC<QuickAddModalProps> = ({
       category_id: categoryId || undefined,
       due_at: dueAtISO,
       reminder_at: reminderAtISO,
-      start_at: planDate ? new Date(`${planDate}T00:00:00`).toISOString() : undefined,
+      start_at: planDate ? planDate : undefined,
       status: "todo",
     });
 

@@ -5,11 +5,20 @@ import {
   ChevronRight,
   Plus,
 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { useTaskStore } from "@/store/useTaskStore";
 import { TaskItem } from "@/components/tasks/TaskItem";
 import { Button } from "@/components/ui/Button";
+import {
+  getTodayLocalDateString,
+  formatLocalDate,
+  extractLocalDate,
+  createDateTimeISO,
+  formatDateOnlyDisplay,
+} from "@/lib/dateUtils";
 
 export const CalendarPage: React.FC = () => {
+  const { i18n } = useTranslation();
   const {
     tasks,
     fetchTasks,
@@ -20,8 +29,11 @@ export const CalendarPage: React.FC = () => {
     deleteTask,
   } = useTaskStore();
 
-  const [currentDate, setCurrentDate] = useState(new Date());
-  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [currentDate, setCurrentDate] = useState<Date>(() => new Date());
+  // Selected date is strictly stored as a "YYYY-MM-DD" local date string
+  const [selectedDateStr, setSelectedDateStr] = useState<string>(() =>
+    getTodayLocalDateString()
+  );
 
   useEffect(() => {
     fetchTasks();
@@ -39,9 +51,9 @@ export const CalendarPage: React.FC = () => {
   };
 
   const goToToday = () => {
-    const now = new Date();
-    setCurrentDate(now);
-    setSelectedDate(now);
+    const today = getTodayLocalDateString();
+    setCurrentDate(new Date());
+    setSelectedDateStr(today);
   };
 
   // Month grid calculation (Monday as start of week, per Section 9)
@@ -50,14 +62,14 @@ export const CalendarPage: React.FC = () => {
   const daysInMonth = new Date(year, month + 1, 0).getDate();
   const daysInPrevMonth = new Date(year, month, 0).getDate();
 
-  const selectedDateStr = selectedDate.toISOString().substring(0, 10);
-  const selectedDateTasks = tasks.filter(
-    (t) =>
-      (t.due_at && t.due_at.substring(0, 10) === selectedDateStr) ||
-      (t.start_at && t.start_at.substring(0, 10) === selectedDateStr)
-  );
+  // Tasks belonging to the selected calendar day (planned date OR deadline date)
+  const selectedDateTasks = tasks.filter((t) => {
+    const planned = extractLocalDate(t.start_at);
+    const due = extractLocalDate(t.due_at);
+    return planned === selectedDateStr || due === selectedDateStr;
+  });
 
-  const monthName = new Intl.DateTimeFormat(undefined, {
+  const monthName = new Intl.DateTimeFormat(i18n.language || undefined, {
     month: "long",
     year: "numeric",
   }).format(currentDate);
@@ -140,22 +152,20 @@ export const CalendarPage: React.FC = () => {
             {/* Days of current month */}
             {Array.from({ length: daysInMonth }).map((_, idx) => {
               const dayNum = idx + 1;
-              const cellDate = new Date(year, month, dayNum);
-              const cellDateStr = `${year}-${String(month + 1).padStart(2, "0")}-${String(dayNum).padStart(2, "0")}`;
+              const cellDateStr = formatLocalDate(year, month + 1, dayNum);
               const isSelected = cellDateStr === selectedDateStr;
-              const isToday =
-                cellDateStr === new Date().toISOString().substring(0, 10);
+              const isToday = cellDateStr === getTodayLocalDateString();
 
-              const dayTasks = tasks.filter(
-                (t) =>
-                  (t.due_at && t.due_at.substring(0, 10) === cellDateStr) ||
-                  (t.start_at && t.start_at.substring(0, 10) === cellDateStr)
-              );
+              const dayTasks = tasks.filter((t) => {
+                const planned = extractLocalDate(t.start_at);
+                const due = extractLocalDate(t.due_at);
+                return planned === cellDateStr || due === cellDateStr;
+              });
 
               return (
                 <div
                   key={`day-${dayNum}`}
-                  onClick={() => setSelectedDate(cellDate)}
+                  onClick={() => setSelectedDateStr(cellDateStr)}
                   className={`h-20 sm:h-24 p-2 rounded-xl border transition-all cursor-pointer flex flex-col justify-between select-none ${
                     isSelected
                       ? "bg-accent/10 border-accent shadow-sm ring-1 ring-accent"
@@ -210,12 +220,12 @@ export const CalendarPage: React.FC = () => {
           <div>
             <div className="flex items-center justify-between pb-3 border-b border-[rgba(28,25,23,0.08)] mb-4">
               <div>
-                <h3 className="text-base font-bold font-sora text-text-primary">
-                  {new Intl.DateTimeFormat(undefined, {
+                <h3 className="text-base font-bold font-sora text-text-primary capitalize">
+                  {formatDateOnlyDisplay(selectedDateStr, i18n.language, {
                     weekday: "short",
                     month: "short",
                     day: "numeric",
-                  }).format(selectedDate)}
+                  })}
                 </h3>
                 <p className="text-xs text-text-secondary mt-0.5">
                   {selectedDateTasks.length}{" "}
@@ -229,7 +239,8 @@ export const CalendarPage: React.FC = () => {
                 onClick={() => {
                   createTask({
                     title: "New scheduled task",
-                    due_at: selectedDate.toISOString(),
+                    start_at: selectedDateStr,
+                    due_at: createDateTimeISO(selectedDateStr, "19:00"),
                     status: "todo",
                     priority: "medium",
                   });

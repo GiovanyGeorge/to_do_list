@@ -7,6 +7,12 @@ import { TaskItem } from "@/components/tasks/TaskItem";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import type { TaskWithDetails } from "@shared/types/database";
+import {
+  getTodayLocalDateString,
+  extractLocalDate,
+  createDateTimeISO,
+  formatDateOnlyDisplay,
+} from "@/lib/dateUtils";
 
 export const MyDayPage: React.FC = () => {
   const { t } = useTranslation();
@@ -22,7 +28,7 @@ export const MyDayPage: React.FC = () => {
   } = useTaskStore();
 
   const [quickTitle, setQuickTitle] = useState("");
-  const todayStr = new Date().toISOString().substring(0, 10);
+  const todayStr = getTodayLocalDateString();
 
   useEffect(() => {
     fetchTasks();
@@ -32,20 +38,28 @@ export const MyDayPage: React.FC = () => {
     e.preventDefault();
     if (!quickTitle.trim()) return;
 
+    const now = new Date();
+    const hh = String(now.getHours()).padStart(2, "0");
+    const mm = String(now.getMinutes()).padStart(2, "0");
+    const dueAt = createDateTimeISO(todayStr, `${hh}:${mm}`);
+
     await createTask({
       title: quickTitle.trim(),
       status: "todo",
       priority: "medium",
       plan_date: todayStr,
-      start_at: new Date().toISOString(),
-      due_at: new Date().toISOString(),
+      start_at: todayStr,
+      due_at: dueAt,
     });
 
     setQuickTitle("");
   };
 
   const myDayTasks = tasks.filter(
-    (t) => t.is_in_my_day || t.due_at?.substring(0, 10) === todayStr
+    (t) =>
+      t.is_in_my_day ||
+      extractLocalDate(t.start_at) === todayStr ||
+      extractLocalDate(t.due_at) === todayStr
   );
   const completedCount = myDayTasks.filter((t) => t.status === "done").length;
   const progressPercent =
@@ -53,11 +67,11 @@ export const MyDayPage: React.FC = () => {
       ? Math.round((completedCount / myDayTasks.length) * 100)
       : 0;
 
-  const dateLabel = new Intl.DateTimeFormat(undefined, {
+  const dateLabel = formatDateOnlyDisplay(todayStr, undefined, {
     weekday: "long",
     month: "long",
     day: "numeric",
-  }).format(new Date());
+  });
 
   const handleReorder = (newOrderedTasks: TaskWithDetails[]) => {
     reorderTasks(newOrderedTasks.map((t) => t.id));
