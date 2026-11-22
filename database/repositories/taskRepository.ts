@@ -46,8 +46,8 @@ export class TaskRepository {
     `);
 
     const insertReminder = this.db.prepare(`
-      INSERT INTO reminders (id, task_id, remind_at, type, title, message, status, created_at)
-      VALUES (?, ?, ?, 'task_reminder', ?, ?, 'pending', ?)
+      INSERT INTO reminders (id, task_id, remind_at, type, title, message, status, repeat_reminder_daily, created_at)
+      VALUES (?, ?, ?, 'task_reminder', ?, ?, 'pending', ?, ?)
     `);
 
     const transaction = this.db.transaction(() => {
@@ -89,6 +89,7 @@ export class TaskRepository {
           input.reminder_at,
           input.title,
           input.description || null,
+          input.repeat_reminder_daily ? 1 : 0,
           now
         );
       }
@@ -151,9 +152,18 @@ export class TaskRepository {
     // Pending reminder if any
     const reminderRow = this.db
       .prepare(
-        "SELECT remind_at FROM reminders WHERE task_id = ? AND status = 'pending' ORDER BY remind_at ASC LIMIT 1"
+        "SELECT remind_at, repeat_reminder_daily FROM reminders WHERE task_id = ? AND status = 'pending' ORDER BY remind_at ASC LIMIT 1"
       )
-      .get(id) as { remind_at: string } | undefined;
+      .get(id) as { remind_at: string; repeat_reminder_daily?: number } | undefined;
+
+    const totalSubtasks = subtasks.length;
+    const completedSubtasks = subtasks.filter((s) => s.completed === 1).length;
+    const progress_percent =
+      totalSubtasks > 0
+        ? Math.round((completedSubtasks / totalSubtasks) * 100)
+        : task.status === "done"
+        ? 100
+        : 0;
 
     return {
       ...task,
@@ -163,6 +173,8 @@ export class TaskRepository {
       blocking_tasks: blockingIds,
       blocked_by_incomplete_count: blockedCount,
       reminder_at: reminderRow?.remind_at || null,
+      repeat_reminder_daily: Boolean(reminderRow?.repeat_reminder_daily),
+      progress_percent,
     };
   }
 
@@ -222,8 +234,101 @@ export class TaskRepository {
 
     sql += " ORDER BY t.position ASC, t.created_at DESC";
 
-    const rows = this.db.prepare(sql).all(...params) as TaskRecord[];
-    return rows.map((r) => this.getById(r.id)!);
+    const rows = this.db.prepare(sql).all(...params) as (TaskRecord & { is_in_my_day: number })[];
+    if (rows.length === 0) return [];
+
+    const taskIds = rows.map((r) => r.id);
+    const placeholders = taskIds.map(() => "?").join(",");
+
+    // Batch 1: Subtasks
+    const subtasks = this.db
+      .prepare(
+        `SELECT * FROM subtasks WHERE task_id IN (${placeholders}) ORDER BY position ASC, created_at ASC`
+      )
+      .all(...taskIds) as SubtaskRecord[];
+    const subtasksByTaskId = new Map<string, SubtaskRecord[]>();
+    for (const st of subtasks) {
+      if (!subtasksByTaskId.has(st.task_id)) subtasksByTaskId.set(st.task_id, []);
+      subtasksByTaskId.get(st.task_id)!.push(st);
+    }
+
+    // Batch 2: Tags
+    const tagRows = this.db
+      .prepare(
+        `SELECT tt.task_id, t.* 
+         FROM tags t 
+         INNER JOIN task_tags tt ON tt.tag_id = t.id 
+         WHERE tt.task_id IN (${placeholders})`
+      )
+      .all(...taskIds) as (TagRecord & { task_id: string })[];
+    const tagsByTaskId = new Map<string, TagRecord[]>();
+    for (const tr of tagRows) {
+      if (!tagsByTaskId.has(tr.task_id)) tagsByTaskId.set(tr.task_id, []);
+      tagsByTaskId.get(tr.task_id)!.push(tr);
+    }
+
+    // Batch 3: Categories
+    const categoryRows = this.db.prepare("SELECT * FROM categories").all() as CategoryRecord[];
+    const categoryMap = new Map(categoryRows.map((c) => [c.id, c]));
+
+    // Batch 4: Pending Reminders
+    const reminderRows = this.db
+      .prepare(
+        `SELECT task_id, remind_at, repeat_reminder_daily 
+         FROM reminders 
+         WHERE task_id IN (${placeholders}) AND status = 'pending'
+         ORDER BY remind_at ASC`
+      )
+      .all(...taskIds) as { task_id: string; remind_at: string; repeat_reminder_daily?: number }[];
+    const reminderByTaskId = new Map<string, { remind_at: string; repeat_reminder_daily?: number }>();
+    for (const rem of reminderRows) {
+      if (!reminderByTaskId.has(rem.task_id)) {
+        reminderByTaskId.set(rem.task_id, rem);
+      }
+    }
+
+    // Batch 5: Dependencies
+    const depRows = this.db
+      .prepare(
+        `SELECT task_id, depends_on_task_id 
+         FROM task_dependencies 
+         WHERE task_id IN (${placeholders})`
+      )
+      .all(...taskIds) as { task_id: string; depends_on_task_id: string }[];
+    const depsByTaskId = new Map<string, string[]>();
+    for (const dep of depRows) {
+      if (!depsByTaskId.has(dep.task_id)) depsByTaskId.set(dep.task_id, []);
+      depsByTaskId.get(dep.task_id)!.push(dep.depends_on_task_id);
+    }
+
+    // Assemble in memory
+    return rows.map((r) => {
+      const taskSubs = subtasksByTaskId.get(r.id) || [];
+      const totalSubs = taskSubs.length;
+      const completedSubs = taskSubs.filter((s) => s.completed === 1).length;
+      const progress_percent =
+        totalSubs > 0
+          ? Math.round((completedSubs / totalSubs) * 100)
+          : r.status === "done"
+          ? 100
+          : 0;
+
+      const reminder = reminderByTaskId.get(r.id);
+      const blocking = depsByTaskId.get(r.id) || [];
+
+      return {
+        ...r,
+        subtasks: taskSubs,
+        tags: tagsByTaskId.get(r.id) || [],
+        category: r.category_id ? categoryMap.get(r.category_id) || null : null,
+        blocking_tasks: blocking,
+        blocked_by_incomplete_count: 0,
+        reminder_at: reminder?.remind_at || null,
+        repeat_reminder_daily: Boolean(reminder?.repeat_reminder_daily),
+        progress_percent,
+        is_in_my_day: Boolean(r.is_in_my_day),
+      };
+    });
   }
 
   update(id: string, input: UpdateTaskInput): TaskWithDetails | null {
@@ -289,8 +394,8 @@ export class TaskRepository {
       if (input.reminder_at) {
         this.db
           .prepare(`
-            INSERT INTO reminders (id, task_id, remind_at, type, title, message, status, created_at)
-            VALUES (?, ?, ?, 'task_reminder', ?, ?, 'pending', ?)
+            INSERT INTO reminders (id, task_id, remind_at, type, title, message, status, repeat_reminder_daily, created_at)
+            VALUES (?, ?, ?, 'task_reminder', ?, ?, 'pending', ?, ?)
           `)
           .run(
             crypto.randomUUID(),
@@ -298,6 +403,7 @@ export class TaskRepository {
             input.reminder_at,
             input.title ?? existing.title,
             input.description !== undefined ? input.description : existing.description,
+            input.repeat_reminder_daily ? 1 : 0,
             new Date().toISOString()
           );
       }
@@ -350,6 +456,16 @@ export class TaskRepository {
     return this.db
       .prepare("SELECT * FROM subtasks WHERE id = ?")
       .get(subtaskId) as SubtaskRecord;
+  }
+
+  updateSubtask(subtaskId: string, title: string): SubtaskRecord | null {
+    this.db
+      .prepare("UPDATE subtasks SET title = ?, updated_at = ? WHERE id = ?")
+      .run(title.trim(), new Date().toISOString(), subtaskId);
+
+    return this.db
+      .prepare("SELECT * FROM subtasks WHERE id = ?")
+      .get(subtaskId) as SubtaskRecord | undefined || null;
   }
 
   deleteSubtask(subtaskId: string): boolean {

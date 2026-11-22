@@ -85,11 +85,11 @@ export const Modal: React.FC<ModalProps> = ({
             animate="animate"
             exit="exit"
             className={clsx(
-              "relative w-full rounded-2xl bg-background-card border border-border-subtle shadow-2xl p-6 overflow-hidden z-10",
+              "relative w-full max-h-[calc(100vh-2.5rem)] flex flex-col rounded-2xl bg-background-card border border-border-subtle shadow-2xl p-6 overflow-hidden z-10",
               maxWidthStyles[maxWidth]
             )}
           >
-            <div className="flex items-start justify-between gap-4 mb-4">
+            <div className="flex items-start justify-between gap-4 mb-4 shrink-0">
               <div>
                 {title && (
                   <h2 className="text-lg font-semibold text-text-primary tracking-tight">
@@ -110,7 +110,9 @@ export const Modal: React.FC<ModalProps> = ({
                 <X className="w-4 h-4" />
               </button>
             </div>
-            {children}
+            <div className="flex-1 overflow-y-auto pr-1 -mr-1">
+              {children}
+            </div>
           </motion.div>
         </motion.div>
       )}

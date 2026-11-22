@@ -153,11 +153,11 @@ export const TaskItem: React.FC<TaskItemProps> = ({
           </div>
 
           {/* Meta row */}
-          <div className="flex items-center gap-2.5 mt-1 text-xs">
+          <div className="flex flex-wrap items-center gap-2 mt-1 text-xs">
             {/* Category Chip */}
             {task.category && (
               <span
-                className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium"
+                className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium whitespace-nowrap shrink-0"
                 style={{
                   backgroundColor: `${task.category.color || "#C2410C"}15`,
                   color: task.category.color || "#C2410C",
@@ -173,10 +173,10 @@ export const TaskItem: React.FC<TaskItemProps> = ({
 
             {/* Subtasks progress */}
             {totalSubtasks > 0 && (
-              <span className="inline-flex items-center gap-1 text-[11px] text-text-secondary bg-background-elevated px-2 py-0.5 rounded-full">
+              <span className="inline-flex items-center gap-1 text-[11px] font-mono text-text-secondary bg-background-elevated px-2 py-0.5 rounded-full whitespace-nowrap shrink-0">
                 <ListTree className="w-3 h-3 text-text-muted" />
                 <span>
-                  {completedSubtasks}/{totalSubtasks}
+                  {completedSubtasks}/{totalSubtasks} ({Math.round((completedSubtasks / totalSubtasks) * 100)}%)
                 </span>
               </span>
             )}
@@ -185,7 +185,7 @@ export const TaskItem: React.FC<TaskItemProps> = ({
             {formattedDueDate && (
               <span
                 className={clsx(
-                  "inline-flex items-center gap-1 text-[11px]",
+                  "inline-flex items-center gap-1 text-[11px] whitespace-nowrap shrink-0",
                   isOverdue ? "text-status-danger font-medium" : "text-text-secondary"
                 )}
               >
@@ -206,17 +206,17 @@ export const TaskItem: React.FC<TaskItemProps> = ({
             {/* Reminder pill */}
             {formattedReminder && (
               <span
-                className="inline-flex items-center gap-1 text-[11px] font-mono text-accent bg-accent/10 px-2 py-0.5 rounded-full border border-accent/20"
-                title={`Remind at: ${formattedReminder}`}
+                className="inline-flex items-center gap-1 text-[11px] font-mono text-accent bg-accent/10 px-2 py-0.5 rounded-full border border-accent/20 whitespace-nowrap shrink-0"
+                title={`Reminder set for: ${formattedReminder}`}
               >
-                <Bell className="w-3 h-3 text-accent" />
-                <span>Remind at {formattedReminder}</span>
+                <Bell className="w-3 h-3 text-accent shrink-0" />
+                <span>{formattedReminder}</span>
               </span>
             )}
 
             {/* My Day pill */}
             {task.is_in_my_day && (
-              <span className="inline-flex items-center gap-1 text-[11px] text-accent font-medium bg-accent/10 px-2 py-0.5 rounded-full">
+              <span className="inline-flex items-center gap-1 text-[11px] text-accent font-medium bg-accent/10 px-2 py-0.5 rounded-full whitespace-nowrap shrink-0">
                 <Sun className="w-3 h-3" />
                 My Day
               </span>

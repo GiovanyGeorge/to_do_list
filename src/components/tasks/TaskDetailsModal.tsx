@@ -33,6 +33,7 @@ export const TaskDetailsModal: React.FC = () => {
     deleteTask,
     addSubtask,
     toggleSubtask,
+    updateSubtask,
     deleteSubtask,
     reorderSubtasks,
   } = useTaskStore();
@@ -53,6 +54,8 @@ export const TaskDetailsModal: React.FC = () => {
   const [planDate, setPlanDate] = useState("");
   const [recurrence, setRecurrence] = useState("");
   const [newSubtaskTitle, setNewSubtaskTitle] = useState("");
+  const [editingSubtaskId, setEditingSubtaskId] = useState<string | null>(null);
+  const [editingSubtaskTitle, setEditingSubtaskTitle] = useState("");
 
   useEffect(() => {
     fetchCategories();
@@ -348,25 +351,71 @@ export const TaskDetailsModal: React.FC = () => {
                       <Check className="w-2.5 h-2.5 stroke-[3]" />
                     )}
                   </button>
-                  <span
-                    className={`truncate ${
-                      st.completed === 1
-                        ? "line-through text-text-muted"
-                        : "text-text-primary font-medium"
-                    }`}
-                  >
-                    {st.title}
-                  </span>
+
+                  {editingSubtaskId === st.id ? (
+                    <input
+                      type="text"
+                      autoFocus
+                      value={editingSubtaskTitle}
+                      onChange={(e) => setEditingSubtaskTitle(e.target.value)}
+                      onBlur={async () => {
+                        if (editingSubtaskTitle.trim() && editingSubtaskTitle !== st.title) {
+                          await updateSubtask(task.id, st.id, editingSubtaskTitle.trim());
+                        }
+                        setEditingSubtaskId(null);
+                      }}
+                      onKeyDown={async (e) => {
+                        if (e.key === "Enter") {
+                          e.preventDefault();
+                          if (editingSubtaskTitle.trim() && editingSubtaskTitle !== st.title) {
+                            await updateSubtask(task.id, st.id, editingSubtaskTitle.trim());
+                          }
+                          setEditingSubtaskId(null);
+                        } else if (e.key === "Escape") {
+                          setEditingSubtaskId(null);
+                        }
+                      }}
+                      className="flex-1 bg-white px-2 py-0.5 rounded border border-accent text-xs text-text-primary focus:outline-none"
+                    />
+                  ) : (
+                    <span
+                      onDoubleClick={() => {
+                        setEditingSubtaskId(st.id);
+                        setEditingSubtaskTitle(st.title);
+                      }}
+                      className={`truncate cursor-text ${
+                        st.completed === 1
+                          ? "line-through text-text-muted"
+                          : "text-text-primary font-medium"
+                      }`}
+                      title="Double click to edit title"
+                    >
+                      {st.title}
+                    </span>
+                  )}
                 </div>
 
-                <button
-                  type="button"
-                  onClick={() => deleteSubtask(task.id, st.id)}
-                  className="opacity-0 group-hover:opacity-100 p-1 text-text-muted hover:text-status-danger transition-opacity rounded"
-                  title="Delete sub-task"
-                >
-                  <X className="w-3.5 h-3.5" />
-                </button>
+                <div className="flex items-center gap-1 shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setEditingSubtaskId(st.id);
+                      setEditingSubtaskTitle(st.title);
+                    }}
+                    className="opacity-0 group-hover:opacity-100 p-1 text-text-muted hover:text-accent transition-opacity rounded"
+                    title="Edit title"
+                  >
+                    <span className="text-[10px] font-mono">✎</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => deleteSubtask(task.id, st.id)}
+                    className="opacity-0 group-hover:opacity-100 p-1 text-text-muted hover:text-status-danger transition-opacity rounded"
+                    title="Delete sub-task"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                </div>
               </Reorder.Item>
             ))}
           </Reorder.Group>

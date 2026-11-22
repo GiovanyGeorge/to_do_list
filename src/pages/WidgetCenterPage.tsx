@@ -26,7 +26,9 @@ export const WidgetCenterPage: React.FC = () => {
     today_tasks: false,
     quick_add: false,
     pomodoro: false,
+    focus: false,
     habits: false,
+    schedule: false,
   });
 
   const checkStatus = async () => {
@@ -77,6 +79,22 @@ export const WidgetCenterPage: React.FC = () => {
         "A standalone floating countdown timer with 25-minute focus sprints and 5-minute restorative breaks.",
       icon: <Clock className="w-6 h-6 text-amber-400" />,
       defaultDimensions: "300 × 340 px",
+    },
+    {
+      id: "focus",
+      title: "Focus Stopwatch",
+      description:
+        "An open-ended persistent focus stopwatch synchronized across the desktop with zero timer drift.",
+      icon: <Clock className="w-6 h-6 text-accent" />,
+      defaultDimensions: "320 × 360 px",
+    },
+    {
+      id: "schedule",
+      title: "Daily Schedule Widget",
+      description:
+        "Chronological daily timeline widget of today's tasks and habit routines with quick checkboxes.",
+      icon: <LayoutGrid className="w-6 h-6 text-blue-400" />,
+      defaultDimensions: "360 × 480 px",
     },
     {
       id: "habits",

@@ -34,8 +34,34 @@ export function registerGoalIpc(repo: GoalRepository): void {
 
   ipcMain.handle(
     "goals:add-milestone",
-    async (_event, goalId: string, title: string) => {
-      return repo.addMilestone(goalId, title);
+    async (
+      _event,
+      goalId: string,
+      input: string | { title: string; targetDate?: string; taskId?: string; projectId?: string }
+    ) => {
+      return repo.addMilestone(goalId, input);
+    }
+  );
+
+  ipcMain.handle(
+    "goals:update-milestone",
+    async (
+      _event,
+      milestoneId: string,
+      input: { title?: string; targetDate?: string | null; taskId?: string | null; projectId?: string | null }
+    ) => {
+      return repo.updateMilestone(milestoneId, input);
+    }
+  );
+
+  ipcMain.handle("goals:delete-milestone", async (_event, milestoneId: string) => {
+    return repo.deleteMilestone(milestoneId);
+  });
+
+  ipcMain.handle(
+    "goals:reorder-milestones",
+    async (_event, goalId: string, milestoneIds: string[]) => {
+      return repo.reorderMilestones(goalId, milestoneIds);
     }
   );
 

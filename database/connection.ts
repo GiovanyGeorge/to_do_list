@@ -34,9 +34,13 @@ export function initDatabase(customPath?: string): Database {
   const dbPath = customPath || getDatabasePath();
   const db = new Database(dbPath);
 
-  // Enable foreign keys and WAL mode per Project Plan Section 6
+  // Enable foreign keys, WAL mode, and high-performance in-memory cache/mmap
   db.pragma("foreign_keys = ON;");
   db.pragma("journal_mode = WAL;");
+  db.pragma("synchronous = NORMAL;");
+  db.pragma("temp_store = MEMORY;");
+  db.pragma("cache_size = -64000;"); // 64 MB page cache
+  db.pragma("mmap_size = 268435456;"); // 256 MB memory-mapped I/O
 
   if (!customPath) {
     dbInstance = db;

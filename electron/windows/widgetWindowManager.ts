@@ -16,7 +16,7 @@ function getWidgetIconPath(preloadPath: string): string | undefined {
   return undefined;
 }
 
-export type WidgetType = "today_tasks" | "quick_add" | "pomodoro" | "habits";
+export type WidgetType = "today_tasks" | "quick_add" | "pomodoro" | "focus" | "habits" | "schedule";
 
 interface WidgetConfig {
   title: string;
@@ -41,11 +41,18 @@ const WIDGET_CONFIGS: Record<WidgetType, WidgetConfig> = {
     minWidth: 320,
     minHeight: 220,
   },
+  focus: {
+    title: "LifeFlow — Focus Stopwatch",
+    width: 340,
+    height: 380,
+    minWidth: 280,
+    minHeight: 300,
+  },
   pomodoro: {
-    title: "LifeFlow — Pomodoro Timer",
-    width: 300,
-    height: 340,
-    minWidth: 260,
+    title: "LifeFlow — Focus Stopwatch",
+    width: 340,
+    height: 380,
+    minWidth: 280,
     minHeight: 300,
   },
   habits: {
@@ -54,6 +61,13 @@ const WIDGET_CONFIGS: Record<WidgetType, WidgetConfig> = {
     height: 420,
     minWidth: 300,
     minHeight: 320,
+  },
+  schedule: {
+    title: "LifeFlow — Daily Schedule",
+    width: 380,
+    height: 500,
+    minWidth: 320,
+    minHeight: 380,
   },
 };
 
@@ -145,9 +159,40 @@ export class WidgetWindowManager {
     return {
       today_tasks: this.isWidgetOpen("today_tasks"),
       quick_add: this.isWidgetOpen("quick_add"),
-      pomodoro: this.isWidgetOpen("pomodoro"),
+      focus: this.isWidgetOpen("focus"),
+      pomodoro: this.isWidgetOpen("pomodoro") || this.isWidgetOpen("focus"),
       habits: this.isWidgetOpen("habits"),
+      schedule: this.isWidgetOpen("schedule"),
     };
+  }
+
+  closeAll(): void {
+    for (const win of this.activeWidgets.values()) {
+      if (!win.isDestroyed()) {
+        win.close();
+      }
+    }
+    this.activeWidgets.clear();
+  }
+
+  toggleAllVisibility(): void {
+    let anyVisible = false;
+    for (const win of this.activeWidgets.values()) {
+      if (!win.isDestroyed() && win.isVisible()) {
+        anyVisible = true;
+        break;
+      }
+    }
+
+    for (const win of this.activeWidgets.values()) {
+      if (!win.isDestroyed()) {
+        if (anyVisible) {
+          win.hide();
+        } else {
+          win.show();
+        }
+      }
+    }
   }
 
   setAlwaysOnTop(type: WidgetType, flag: boolean): void {

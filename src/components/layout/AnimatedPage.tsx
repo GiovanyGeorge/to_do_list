@@ -3,22 +3,25 @@ import { motion } from "motion/react";
 import { useMotion } from "@/hooks/useMotion";
 
 /**
- * Wraps a page component with entrance/exit animation.
- * Place inside each <Route element={...} /> to get smooth page transitions
- * with AnimatePresence in the Shell.
+ * Wraps a page component with a snappy, single-phase entrance transition.
+ * Prevents double-animation and lag during navigation.
  */
 export const AnimatedPage: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
-  const { page } = useMotion();
+  const { enabled } = useMotion();
+
+  if (!enabled) {
+    return <div className="w-full h-full">{children}</div>;
+  }
 
   return (
     <motion.div
-      variants={page}
-      initial="initial"
-      animate="animate"
-      exit="exit"
-      style={{ width: "100%", height: "100%" }}
+      initial={{ opacity: 0, y: 6 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.16, ease: [0.16, 1, 0.3, 1] }}
+      className="w-full h-full"
     >
       {children}
     </motion.div>

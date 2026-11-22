@@ -4,6 +4,7 @@ import { FolderKanban, Plus, Calendar, ChevronRight, ArrowLeft } from "lucide-re
 import { useProjectStore } from "@/store/useProjectStore";
 import { useTaskStore } from "@/store/useTaskStore";
 import { TaskItem } from "@/components/tasks/TaskItem";
+import { TaskDetailsModal } from "@/components/tasks/TaskDetailsModal";
 import { Button } from "@/components/ui/Button";
 import { CreateProjectModal } from "@/components/projects/CreateProjectModal";
 import { getTodayLocalDateString } from "@/lib/dateUtils";
@@ -12,10 +13,12 @@ export const ProjectsPage: React.FC = () => {
   const { t } = useTranslation();
   const { projects, fetchProjects, selectedProjectId, setSelectedProjectId } =
     useProjectStore();
-  const { tasks, fetchTasks, toggleTask, setSelectedTaskId, toggleDayPlan, deleteTask } =
+  const { tasks, fetchTasks, createTask, toggleTask, setSelectedTaskId, toggleDayPlan, deleteTask } =
     useTaskStore();
 
   const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [isAddingTask, setIsAddingTask] = useState(false);
+  const [newTaskTitle, setNewTaskTitle] = useState("");
   const todayStr = getTodayLocalDateString();
 
   useEffect(() => {
@@ -25,6 +28,20 @@ export const ProjectsPage: React.FC = () => {
 
   const activeProject = projects.find((p) => p.id === selectedProjectId);
   const projectTasks = tasks.filter((t) => t.project_id === selectedProjectId);
+
+  const handleCreateProjectTask = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newTaskTitle.trim() || !activeProject) return;
+    await createTask({
+      title: newTaskTitle.trim(),
+      project_id: activeProject.id,
+      status: "todo",
+      priority: "medium",
+    });
+    setNewTaskTitle("");
+    setIsAddingTask(false);
+    fetchProjects(); // Refresh aggregated progress
+  };
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto">
@@ -55,7 +72,16 @@ export const ProjectsPage: React.FC = () => {
           </div>
         </div>
 
-        {!activeProject && (
+        {activeProject ? (
+          <Button
+            variant="primary"
+            size="sm"
+            onClick={() => setIsAddingTask(!isAddingTask)}
+            leftIcon={<Plus className="w-4 h-4" />}
+          >
+            Add Task
+          </Button>
+        ) : (
           <Button
             variant="primary"
             size="sm"
@@ -98,6 +124,34 @@ export const ProjectsPage: React.FC = () => {
               </span>
             </div>
           </div>
+
+          {/* Quick Add Task Form */}
+          {isAddingTask && (
+            <form
+              onSubmit={handleCreateProjectTask}
+              className="p-4 rounded-2xl bg-white border border-accent/40 shadow-card flex items-center gap-2"
+            >
+              <input
+                type="text"
+                autoFocus
+                placeholder="What task needs to be completed for this project?"
+                value={newTaskTitle}
+                onChange={(e) => setNewTaskTitle(e.target.value)}
+                className="flex-1 px-3.5 py-2 rounded-xl bg-background text-xs text-text-primary placeholder:text-text-muted border border-[rgba(28,25,23,0.12)] focus:outline-none focus:border-accent"
+              />
+              <Button type="submit" variant="primary" size="sm" disabled={!newTaskTitle.trim()}>
+                Add Task
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setIsAddingTask(false)}
+              >
+                Cancel
+              </Button>
+            </form>
+          )}
 
           <div className="space-y-2.5">
             <h3 className="text-sm font-bold font-sora text-text-primary mb-3">
@@ -205,6 +259,8 @@ export const ProjectsPage: React.FC = () => {
         isOpen={isCreateOpen}
         onClose={() => setIsCreateOpen(false)}
       />
+
+      <TaskDetailsModal />
     </div>
   );
 };

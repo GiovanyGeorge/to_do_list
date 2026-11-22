@@ -24,6 +24,7 @@ import type {
   DailyVerseWithDetails,
   BibleFavoriteRecord,
   BibleFavoriteWithVerse,
+  FocusSessionRecord,
 } from "./database";
 import type { BackupMetadata } from "../../electron/services/backupService";
 import type { ArchivedItem } from "../../database/repositories/archiveRepository";
@@ -35,7 +36,7 @@ export interface AppInfo {
   isPackaged: boolean;
 }
 
-export type WidgetType = "today_tasks" | "quick_add" | "pomodoro" | "habits";
+export type WidgetType = "today_tasks" | "quick_add" | "pomodoro" | "focus" | "habits" | "schedule";
 
 export interface ElectronAPI {
   getAppInfo: () => Promise<AppInfo>;
@@ -68,6 +69,7 @@ export interface ElectronAPI {
   ) => Promise<{ success: boolean }>;
   addSubtask: (taskId: string, title: string) => Promise<SubtaskRecord>;
   toggleSubtask: (subtaskId: string, completed?: boolean) => Promise<SubtaskRecord | null>;
+  updateSubtask: (subtaskId: string, title: string) => Promise<SubtaskRecord | null>;
   deleteSubtask: (subtaskId: string) => Promise<boolean>;
 
   // Category API
@@ -137,7 +139,16 @@ export interface ElectronAPI {
     milestones?: string[];
   }) => Promise<GoalWithDetails>;
   toggleGoalMilestone: (milestoneId: string) => Promise<boolean>;
-  addGoalMilestone: (goalId: string, title: string) => Promise<GoalMilestoneRecord>;
+  addGoalMilestone: (
+    goalId: string,
+    input: string | { title: string; targetDate?: string; taskId?: string; projectId?: string }
+  ) => Promise<GoalMilestoneRecord>;
+  updateGoalMilestone: (
+    milestoneId: string,
+    input: { title?: string; targetDate?: string | null; taskId?: string | null; projectId?: string | null }
+  ) => Promise<GoalMilestoneRecord | null>;
+  deleteGoalMilestone: (milestoneId: string) => Promise<boolean>;
+  reorderGoalMilestones: (goalId: string, milestoneIds: string[]) => Promise<boolean>;
   deleteGoal: (id: string) => Promise<boolean>;
 
   // Notes API
@@ -206,6 +217,16 @@ export interface ElectronAPI {
     bookId: number,
     chapter: number
   ) => Promise<DailyVerseWithDetails[]>;
+
+  // Focus Stopwatch API
+  getCurrentFocusSession: () => Promise<{ session: FocusSessionRecord | null; elapsedSeconds: number }>;
+  startFocusSession: (taskId?: string, title?: string) => Promise<{ session: FocusSessionRecord; elapsedSeconds: number }>;
+  pauseFocusSession: () => Promise<{ session: FocusSessionRecord | null; elapsedSeconds: number }>;
+  resumeFocusSession: () => Promise<{ session: FocusSessionRecord | null; elapsedSeconds: number }>;
+  resetFocusSession: () => Promise<{ session: null; elapsedSeconds: number }>;
+  endFocusSession: () => Promise<{ session: FocusSessionRecord | null; durationSeconds: number }>;
+  getTodayFocusSeconds: (todayStr: string) => Promise<number>;
+  onFocusStateChanged?: (callback: () => void) => () => void;
 }
 
 declare global {

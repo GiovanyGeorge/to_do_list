@@ -13,7 +13,7 @@
 [![SQLite](https://img.shields.io/badge/Database-SQLite%20(node%3Asqlite)-003B57?style=flat-square&logo=sqlite)](https://sqlite.org/)
 [![Tailwind CSS](https://img.shields.io/badge/Styling-Tailwind%20CSS%203.4-38B2AC?style=flat-square&logo=tailwind-css)](https://tailwindcss.com/)
 [![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)](LICENSE)
-[![Tests](https://img.shields.io/badge/Tests-45%20Passed-brightgreen?style=flat-square&logo=vitest)](tests)
+[![Tests](https://img.shields.io/badge/Tests-67%20Passed-brightgreen?style=flat-square&logo=vitest)](tests)
 
 <br/>
 
@@ -57,18 +57,18 @@ LifeFlow is organized into clean functional modules, with all core features veri
 | Module | Status | Description |
 | :--- | :---: | :--- |
 | **Task Management** | ![Implemented](https://img.shields.io/badge/Implemented-15803D?style=flat-square) | Create, edit, toggle, soft-delete, and archive tasks with priorities (`urgent`, `high`, `medium`, `low`), due dates, start times, and recurrence rules. |
-| **Interactive Reordering** | ![Implemented](https://img.shields.io/badge/Implemented-15803D?style=flat-square) | Drag-and-drop task ordering in Dashboard Today's tasks, My Day, and categorized task lists. |
-| **Subtasks Engine** | ![Implemented](https://img.shields.io/badge/Implemented-15803D?style=flat-square) | Break complex tasks into ordered subtasks with completion tracking and progress bars. |
+| **Smart Daily Planner & Carry-over** | ![Implemented](https://img.shields.io/badge/Implemented-15803D?style=flat-square) | Intelligent suggestions for overdue tasks, carried-over unfinished items, and high-priority backlog; unfinished tasks never disappear silently. |
+| **Subtasks & Progress Engine** | ![Implemented](https://img.shields.io/badge/Implemented-15803D?style=flat-square) | Multi-subtask breakdown with inline title editing, reordering, partial percentage progress (e.g. 3/5 = 60%), and aggregation into project rates. |
 | **Categories System** | ![Implemented](https://img.shields.io/badge/Implemented-15803D?style=flat-square) | Color-coded and icon-coded classification for work, study, personal, health, and custom areas. |
-| **Projects & Milestones** | ![Implemented](https://img.shields.io/badge/Implemented-15803D?style=flat-square) | Multi-task project organization with start/target dates, status tracking, and notes. |
-| **Calendar & Day Planner** | ![Implemented](https://img.shields.io/badge/Implemented-15803D?style=flat-square) | Visual month/day calendar views, date scheduling, and daily planning boards. |
-| **Focus Timer & Pomodoro** | ![Implemented](https://img.shields.io/badge/Implemented-15803D?style=flat-square) | Integrated focus timer directly on the Dashboard, plus detached desktop Pomodoro widget. |
+| **Projects Management** | ![Implemented](https://img.shields.io/badge/Implemented-15803D?style=flat-square) | Multi-task project organization, instant task creation inside project details, and weighted subtask progress roll-up. |
+| **Goals & Dynamic Milestones** | ![Implemented](https://img.shields.io/badge/Implemented-15803D?style=flat-square) | Long-term aspiration tracking with card-level milestone creation, inline editing, reordering, project/task linking, and Next Milestone highlight. |
+| **Focus Stopwatch (Zero Drift)** | ![Implemented](https://img.shields.io/badge/Implemented-15803D?style=flat-square) | Persistent, timestamp-synchronized open-ended stopwatch starting at 00:00:00, resilient to Chromium background throttling, shared with desktop widget. |
+| **Calendar & Day Planner** | ![Implemented](https://img.shields.io/badge/Implemented-15803D?style=flat-square) | Single-source-of-truth date generation (`YYYY-MM-DD`), monthly overview, and daily planning boards. |
 | **Habits & Streaks** | ![Implemented](https://img.shields.io/badge/Implemented-15803D?style=flat-square) | Daily and weekly habit tracking with streak counters, completion logs, and pre-built habit libraries. |
-| **Goals Tracking** | ![Implemented](https://img.shields.io/badge/Implemented-15803D?style=flat-square) | Set, monitor, and update quarterly and annual life objectives. |
 | **Notes & Scratchpad** | ![Implemented](https://img.shields.io/badge/Implemented-15803D?style=flat-square) | Fast local note taking with category linking and instant full-text search. |
-| **Desktop Floating Widgets** | ![Implemented](https://img.shields.io/badge/Implemented-15803D?style=flat-square) | Standalone frameless micro-windows (Today's Tasks, Quick Add, Pomodoro, Habit Tracker) that float on top of your desktop. |
-| **Notifications & Reminders**| ![Implemented](https://img.shields.io/badge/Implemented-15803D?style=flat-square) | Scheduled local task reminders (`at_time`, `15m`, `30m`, `1h`, custom) with sound cues and in-app toasts. |
-| **Daily Bible Verse** | ![Implemented](https://img.shields.io/badge/Implemented-15803D?style=flat-square) | Public-domain Smith & Van Dyke translation (31,104 verses), stable daily rotation, Psalm superscription separation, and local Favorites. |
+| **Desktop Floating Widgets** | ![Implemented](https://img.shields.io/badge/Implemented-15803D?style=flat-square) | Standalone frameless micro-windows (Today's Tasks, Quick Add, Habits, Focus Stopwatch, Daily Schedule) with Always-on-Top pin toggle. |
+| **Background Lifecycle & Tray** | ![Implemented](https://img.shields.io/badge/Implemented-15803D?style=flat-square) | Minimizes to system tray on close, keeping widgets accessible in the background until explicit exit; supports Start with Windows. |
+| **Daily Bible Verse** | ![Implemented](https://img.shields.io/badge/Implemented-15803D?style=flat-square) | Public-domain Smith & Van Dyke translation (31,104 verses), stable daily rotation, Psalm heading separation, and local Favorites. |
 | **Backup & Data Export** | ![Implemented](https://img.shields.io/badge/Implemented-15803D?style=flat-square) | Atomic SQLite hot backups (`VACUUM INTO`), pre-restore checkpoints, and JSON/CSV data export. |
 | **Bilingual Localization** | ![Implemented](https://img.shields.io/badge/Implemented-15803D?style=flat-square) | Full English and Arabic translations with automatic layout switching (`dir="ltr"` / `dir="rtl"`). |
 

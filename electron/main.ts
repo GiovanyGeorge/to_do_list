@@ -3,10 +3,7 @@ import path from "node:path";
 import fs from "node:fs";
 import { fileURLToPath } from "node:url";
 
-// Disable hardware acceleration fallback for maximum Windows desktop compatibility
-if (app?.disableHardwareAcceleration) {
-  app.disableHardwareAcceleration();
-}
+// Hardware acceleration enabled for smooth GPU-accelerated 60fps rendering, animations, and blurs
 
 // Error logging helper
 process.on("uncaughtException", (err) => {
@@ -48,6 +45,8 @@ import { CategoryRepository } from "../database/repositories/categoryRepository"
 import { registerCategoryIpc } from "./ipc/categoryIpc";
 import { BibleRepository } from "../database/repositories/bibleRepository";
 import { registerBibleIpc } from "./ipc/bibleIpc";
+import { FocusRepository } from "../database/repositories/focusRepository";
+import { registerFocusIpc } from "./ipc/focusIpc";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -62,6 +61,8 @@ process.env.VITE_PUBLIC = process.env.VITE_DEV_SERVER_URL
 let mainWindow: BrowserWindow | null = null;
 let appTray: Tray | null = null;
 let notificationServiceInstance: NotificationService | null = null;
+let widgetManagerInstance: WidgetWindowManager | null = null;
+let isQuitting = false;
 
 export function getResourcePath(relativePath: string): string {
   const candidates = [
@@ -88,27 +89,71 @@ function createTray() {
     appTray = new Tray(icon);
     appTray.setToolTip("LifeFlow — Daily Productivity & Focus");
 
-    const contextMenu = Menu.buildFromTemplate([
-      {
-        label: "Open LifeFlow",
-        click: () => {
-          if (mainWindow) {
-            if (mainWindow.isMinimized()) mainWindow.restore();
-            mainWindow.show();
-            mainWindow.focus();
-          }
-        },
-      },
-      { type: "separator" },
-      {
-        label: "Quit LifeFlow",
-        click: () => {
-          app.quit();
-        },
-      },
-    ]);
+    const updateContextMenu = () => {
+      let openAtLogin = false;
+      try {
+        openAtLogin = app.getLoginItemSettings().openAtLogin;
+      } catch {}
 
-    appTray.setContextMenu(contextMenu);
+      const contextMenu = Menu.buildFromTemplate([
+        {
+          label: "Open LifeFlow",
+          click: () => {
+            if (mainWindow) {
+              if (mainWindow.isMinimized()) mainWindow.restore();
+              mainWindow.show();
+              mainWindow.focus();
+            }
+          },
+        },
+        {
+          label: "Show/Hide Floating Widgets",
+          click: () => {
+            widgetManagerInstance?.toggleAllVisibility();
+          },
+        },
+        {
+          label: "Settings",
+          click: () => {
+            if (mainWindow) {
+              if (mainWindow.isMinimized()) mainWindow.restore();
+              mainWindow.show();
+              mainWindow.focus();
+              mainWindow.webContents.send("navigate", "/settings");
+            }
+          },
+        },
+        {
+          label: "Start with Windows",
+          type: "checkbox",
+          checked: openAtLogin,
+          click: (menuItem) => {
+            try {
+              app.setLoginItemSettings({
+                openAtLogin: menuItem.checked,
+                path: process.execPath,
+              });
+            } catch (err) {
+              console.error("setLoginItemSettings error:", err);
+            }
+          },
+        },
+        { type: "separator" },
+        {
+          label: "Exit LifeFlow",
+          click: () => {
+            isQuitting = true;
+            widgetManagerInstance?.closeAll();
+            app.quit();
+          },
+        },
+      ]);
+
+      appTray?.setContextMenu(contextMenu);
+    };
+
+    updateContextMenu();
+
     appTray.on("double-click", () => {
       if (mainWindow) {
         if (mainWindow.isMinimized()) mainWindow.restore();
@@ -160,13 +205,16 @@ function initServices() {
   const analyticsRepo = new AnalyticsRepository(db);
   registerAnalyticsIpc(analyticsRepo);
 
-  const widgetManager = new WidgetWindowManager(
+  widgetManagerInstance = new WidgetWindowManager(
     path.join(__dirname, "preload.js"),
     process.env.VITE_DEV_SERVER_URL,
     RENDERER_DIST,
     reminderRepo
   );
-  registerWidgetIpc(widgetManager);
+  registerWidgetIpc(widgetManagerInstance);
+
+  const focusRepo = new FocusRepository(db);
+  registerFocusIpc(focusRepo);
 
   const backupsDir = path.join(path.dirname(dbPath), "backups");
   const backupService = new BackupService(db, dbPath, backupsDir);
@@ -189,6 +237,7 @@ function createWindow() {
     height: 800,
     minWidth: 900,
     minHeight: 600,
+    show: false,
     backgroundColor: "#111318",
     frame: false,
     titleBarStyle: "hidden",
@@ -202,6 +251,10 @@ function createWindow() {
     },
   });
 
+  mainWindow.once("ready-to-show", () => {
+    mainWindow?.show();
+  });
+
   notificationServiceInstance?.setNotificationListener((notif) => {
     mainWindow?.webContents.send("notifications:new", notif);
   });
@@ -212,6 +265,13 @@ function createWindow() {
 
   mainWindow.on("unmaximize", () => {
     mainWindow?.webContents.send("window-state-change", false);
+  });
+
+  mainWindow.on("close", (e) => {
+    if (!isQuitting) {
+      e.preventDefault();
+      mainWindow?.hide();
+    }
   });
 
   if (process.env.VITE_DEV_SERVER_URL) {
@@ -244,7 +304,11 @@ ipcMain.handle("window:maximize", () => {
 });
 
 ipcMain.handle("window:close", () => {
-  mainWindow?.close();
+  if (!isQuitting) {
+    mainWindow?.hide();
+  } else {
+    mainWindow?.close();
+  }
 });
 
 ipcMain.handle("window:is-maximized", () => {
@@ -255,8 +319,11 @@ app.whenReady().then(() => {
   try {
     initServices();
     createWindow();
-    createTray();
-    notificationServiceInstance?.initializeScheduler();
+    // Non-blocking initialization for secondary services after window creation
+    setImmediate(() => {
+      createTray();
+      notificationServiceInstance?.initializeScheduler();
+    });
   } catch (err: unknown) {
     fs.appendFileSync("lifeflow-error.log", `[${new Date().toISOString()}] whenReady error: ${(err as Error).stack || err}\n`);
   }
@@ -268,9 +335,16 @@ app.whenReady().then(() => {
   });
 });
 
+app.on("before-quit", () => {
+  isQuitting = true;
+  widgetManagerInstance?.closeAll();
+});
+
 app.on("window-all-closed", () => {
-  closeDatabase();
-  if (process.platform !== "darwin") {
-    app.quit();
+  if (isQuitting) {
+    closeDatabase();
+    if (process.platform !== "darwin") {
+      app.quit();
+    }
   }
 });

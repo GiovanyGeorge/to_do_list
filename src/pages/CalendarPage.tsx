@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import {
   Calendar as CalendarIcon,
   ChevronLeft,
@@ -62,12 +62,27 @@ export const CalendarPage: React.FC = () => {
   const daysInMonth = new Date(year, month + 1, 0).getDate();
   const daysInPrevMonth = new Date(year, month, 0).getDate();
 
-  // Tasks belonging to the selected calendar day (planned date OR deadline date)
-  const selectedDateTasks = tasks.filter((t) => {
-    const planned = extractLocalDate(t.start_at);
-    const due = extractLocalDate(t.due_at);
-    return planned === selectedDateStr || due === selectedDateStr;
-  });
+  // Tasks indexed by date string (planned date OR deadline date) in a single pass O(N) Map
+  const tasksByDateMap = useMemo(() => {
+    const map = new Map<string, typeof tasks>();
+    for (const t of tasks) {
+      const planned = extractLocalDate(t.start_at);
+      const due = extractLocalDate(t.due_at);
+      if (planned) {
+        const list = map.get(planned) || [];
+        list.push(t);
+        map.set(planned, list);
+      }
+      if (due && due !== planned) {
+        const list = map.get(due) || [];
+        list.push(t);
+        map.set(due, list);
+      }
+    }
+    return map;
+  }, [tasks]);
+
+  const selectedDateTasks = tasksByDateMap.get(selectedDateStr) || [];
 
   const monthName = new Intl.DateTimeFormat(i18n.language || undefined, {
     month: "long",
@@ -156,11 +171,7 @@ export const CalendarPage: React.FC = () => {
               const isSelected = cellDateStr === selectedDateStr;
               const isToday = cellDateStr === getTodayLocalDateString();
 
-              const dayTasks = tasks.filter((t) => {
-                const planned = extractLocalDate(t.start_at);
-                const due = extractLocalDate(t.due_at);
-                return planned === cellDateStr || due === cellDateStr;
-              });
+              const dayTasks = tasksByDateMap.get(cellDateStr) || [];
 
               return (
                 <div

@@ -48,6 +48,8 @@ const api: ElectronAPI = {
     ipcRenderer.invoke("tasks:add-subtask", taskId, title),
   toggleSubtask: (subtaskId: string, completed?: boolean) =>
     ipcRenderer.invoke("tasks:toggle-subtask", subtaskId, completed),
+  updateSubtask: (subtaskId: string, title: string) =>
+    ipcRenderer.invoke("tasks:update-subtask", subtaskId, title),
   deleteSubtask: (subtaskId: string) =>
     ipcRenderer.invoke("tasks:delete-subtask", subtaskId),
 
@@ -130,8 +132,16 @@ const api: ElectronAPI = {
   }) => ipcRenderer.invoke("goals:create", input),
   toggleGoalMilestone: (milestoneId: string) =>
     ipcRenderer.invoke("goals:toggle-milestone", milestoneId),
-  addGoalMilestone: (goalId: string, title: string) =>
-    ipcRenderer.invoke("goals:add-milestone", goalId, title),
+  addGoalMilestone: (goalId: string, input: string | { title: string; targetDate?: string; taskId?: string; projectId?: string }) =>
+    ipcRenderer.invoke("goals:add-milestone", goalId, input),
+  updateGoalMilestone: (
+    milestoneId: string,
+    input: { title?: string; targetDate?: string | null; taskId?: string | null; projectId?: string | null }
+  ) => ipcRenderer.invoke("goals:update-milestone", milestoneId, input),
+  deleteGoalMilestone: (milestoneId: string) =>
+    ipcRenderer.invoke("goals:delete-milestone", milestoneId),
+  reorderGoalMilestones: (goalId: string, milestoneIds: string[]) =>
+    ipcRenderer.invoke("goals:reorder-milestones", goalId, milestoneIds),
   deleteGoal: (id: string) => ipcRenderer.invoke("goals:delete", id),
 
   // Notes methods
@@ -200,6 +210,24 @@ const api: ElectronAPI = {
   ) => ipcRenderer.invoke("bible:search-verses", query, options),
   getBibleChapter: (bookId: number, chapter: number) =>
     ipcRenderer.invoke("bible:get-chapter", bookId, chapter),
+
+  // Focus Stopwatch methods
+  getCurrentFocusSession: () => ipcRenderer.invoke("focus:get-current"),
+  startFocusSession: (taskId?: string, title?: string) =>
+    ipcRenderer.invoke("focus:start", taskId, title),
+  pauseFocusSession: () => ipcRenderer.invoke("focus:pause"),
+  resumeFocusSession: () => ipcRenderer.invoke("focus:resume"),
+  resetFocusSession: () => ipcRenderer.invoke("focus:reset"),
+  endFocusSession: () => ipcRenderer.invoke("focus:end"),
+  getTodayFocusSeconds: (todayStr: string) =>
+    ipcRenderer.invoke("focus:get-today-seconds", todayStr),
+  onFocusStateChanged: (callback: () => void) => {
+    const handler = () => callback();
+    ipcRenderer.on("focus:state-changed", handler);
+    return () => {
+      ipcRenderer.removeListener("focus:state-changed", handler);
+    };
+  },
 };
 
 contextBridge.exposeInMainWorld("electronAPI", api);

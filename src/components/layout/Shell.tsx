@@ -8,6 +8,7 @@ import { AnimatedPage } from "./AnimatedPage";
 import { DailyVerseButton } from "../bible/DailyVerseButton";
 import { DailyVersePopover } from "../bible/DailyVersePopover";
 import { BibleFavoritesModal } from "../bible/BibleFavoritesModal";
+import { StartupWelcome } from "./StartupWelcome";
 import { useBibleStore } from "@/store/useBibleStore";
 
 export const Shell: React.FC = () => {
@@ -20,11 +21,14 @@ export const Shell: React.FC = () => {
 
   return (
     <div className="flex h-screen w-screen overflow-hidden bg-background text-text-primary select-none">
+      {/* Startup Welcome Experience */}
+      <StartupWelcome />
+
       <Sidebar />
       <div className="flex flex-col flex-1 min-w-0 h-full overflow-hidden">
         <Header />
         <main className="flex-1 overflow-y-auto p-6 bg-background relative">
-          <AnimatePresence mode="wait">
+          <AnimatePresence initial={false}>
             <AnimatedPage key={location.pathname}>
               <Outlet />
             </AnimatedPage>

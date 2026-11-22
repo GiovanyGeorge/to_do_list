@@ -24,6 +24,7 @@ interface TaskStoreState {
   reorderSubtasks: (taskId: string, subtaskIds: string[]) => Promise<void>;
   addSubtask: (taskId: string, title: string) => Promise<void>;
   toggleSubtask: (taskId: string, subtaskId: string) => Promise<void>;
+  updateSubtask: (taskId: string, subtaskId: string, title: string) => Promise<void>;
   deleteSubtask: (taskId: string, subtaskId: string) => Promise<void>;
 }
 
@@ -37,7 +38,7 @@ export const useTaskStore = create<TaskStoreState>((set) => ({
   selectedTaskId: null,
 
   fetchTasks: async (filters?: TaskFilterParams) => {
-    set({ isLoading: true, error: null });
+    set((state) => ({ isLoading: state.tasks.length === 0, error: null }));
     try {
       if (window.electronAPI?.listTasks) {
         const tasks = await window.electronAPI.listTasks(filters);
@@ -113,7 +114,18 @@ export const useTaskStore = create<TaskStoreState>((set) => ({
         return updated;
       } else {
         set((state) => ({
-          tasks: state.tasks.map((t) => (t.id === id ? { ...t, ...input } : t)),
+          tasks: state.tasks.map((t) =>
+            t.id === id
+              ? {
+                  ...t,
+                  ...input,
+                  repeat_reminder_daily:
+                    input.repeat_reminder_daily === null
+                      ? undefined
+                      : (input.repeat_reminder_daily ?? t.repeat_reminder_daily),
+                }
+              : t
+          ),
         }));
         return null;
       }
@@ -278,6 +290,28 @@ export const useTaskStore = create<TaskStoreState>((set) => ({
     try {
       if (window.electronAPI?.toggleSubtask) {
         await window.electronAPI.toggleSubtask(subtaskId);
+      }
+    } catch (err: unknown) {
+      set({ error: (err as Error).message });
+    }
+  },
+
+  updateSubtask: async (taskId: string, subtaskId: string, title: string) => {
+    set((state) => ({
+      tasks: state.tasks.map((t) => {
+        if (t.id !== taskId) return t;
+        return {
+          ...t,
+          subtasks: t.subtasks.map((s) =>
+            s.id === subtaskId ? { ...s, title } : s
+          ),
+        };
+      }),
+    }));
+
+    try {
+      if (window.electronAPI?.updateSubtask) {
+        await window.electronAPI.updateSubtask(subtaskId, title);
       }
     } catch (err: unknown) {
       set({ error: (err as Error).message });

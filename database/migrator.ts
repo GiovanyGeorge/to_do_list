@@ -47,7 +47,44 @@ export function runMigrations(db: Database): void {
     }
   }
 
-  ensureBibleDataLoaded(db);
+  // Fast-path: Check if post-migration hooks have already been executed
+  const columnsEnsured = checkStmt.get("_schema_columns_ensured");
+  if (!columnsEnsured) {
+    ensureSchemaColumns(db);
+    insertStmt.run("_schema_columns_ensured", new Date().toISOString());
+  }
+
+  const bibleLoaded = checkStmt.get("_bible_data_loaded");
+  if (!bibleLoaded) {
+    ensureBibleDataLoaded(db);
+    insertStmt.run("_bible_data_loaded", new Date().toISOString());
+  }
+}
+
+function ensureSchemaColumns(db: Database): void {
+  try {
+    // 1. Reminders repeat_reminder_daily
+    const reminderCols = db.prepare("PRAGMA table_info(reminders)").all() as { name: string }[];
+    if (reminderCols.length > 0 && !reminderCols.some((c) => c.name === "repeat_reminder_daily")) {
+      db.exec("ALTER TABLE reminders ADD COLUMN repeat_reminder_daily INTEGER DEFAULT 0;");
+    }
+
+    // 2. Goal milestones task_id, project_id, target_date
+    const milestoneCols = db.prepare("PRAGMA table_info(goal_milestones)").all() as { name: string }[];
+    if (milestoneCols.length > 0) {
+      if (!milestoneCols.some((c) => c.name === "task_id")) {
+        db.exec("ALTER TABLE goal_milestones ADD COLUMN task_id TEXT;");
+      }
+      if (!milestoneCols.some((c) => c.name === "project_id")) {
+        db.exec("ALTER TABLE goal_milestones ADD COLUMN project_id TEXT;");
+      }
+      if (!milestoneCols.some((c) => c.name === "target_date")) {
+        db.exec("ALTER TABLE goal_milestones ADD COLUMN target_date TEXT;");
+      }
+    }
+  } catch (err) {
+    console.error("ensureSchemaColumns error:", err);
+  }
 }
 
 export function ensureBibleDataLoaded(db: Database): void {

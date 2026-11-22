@@ -44,20 +44,36 @@ export class ProjectRepository {
 
     if (!project) return null;
 
-    const stats = this.db
-      .prepare(`
-        SELECT 
-          COUNT(*) as total,
-          SUM(CASE WHEN status = 'done' THEN 1 ELSE 0 END) as completed
-        FROM tasks 
-        WHERE project_id = ? AND deleted_at IS NULL
-      `)
-      .get(id) as { total: number; completed: number | null } | undefined;
+    const taskRows = this.db
+      .prepare("SELECT id, status FROM tasks WHERE project_id = ? AND deleted_at IS NULL")
+      .all(id) as { id: string; status: string }[];
 
-    const task_count = stats?.total || 0;
-    const completed_task_count = stats?.completed || 0;
+    const task_count = taskRows.length;
+    let completed_task_count = 0;
+    let totalProgressSum = 0;
+
+    for (const t of taskRows) {
+      const subtasks = this.db
+        .prepare("SELECT completed FROM subtasks WHERE task_id = ?")
+        .all(t.id) as { completed: number }[];
+
+      if (subtasks.length > 0) {
+        const doneSubs = subtasks.filter((s) => s.completed === 1).length;
+        const taskPct = Math.round((doneSubs / subtasks.length) * 100);
+        totalProgressSum += taskPct;
+        if (t.status === "done" || doneSubs === subtasks.length) {
+          completed_task_count++;
+        }
+      } else {
+        if (t.status === "done") {
+          completed_task_count++;
+          totalProgressSum += 100;
+        }
+      }
+    }
+
     const progress_percent =
-      task_count > 0 ? Math.round((completed_task_count / task_count) * 100) : 0;
+      task_count > 0 ? Math.round(totalProgressSum / task_count) : 0;
 
     return {
       ...project,

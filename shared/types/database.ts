@@ -125,6 +125,8 @@ export interface TaskWithDetails extends TaskRecord {
   blocking_tasks?: string[];
   blocked_by_incomplete_count?: number;
   reminder_at?: string | null;
+  repeat_reminder_daily?: boolean;
+  progress_percent?: number;
 }
 
 export interface CreateTaskInput {
@@ -141,6 +143,7 @@ export interface CreateTaskInput {
   subtasks?: string[];
   plan_date?: string;
   reminder_at?: string;
+  repeat_reminder_daily?: boolean;
 }
 
 export interface UpdateTaskInput {
@@ -156,6 +159,7 @@ export interface UpdateTaskInput {
   recurrence_rule?: string | null;
   archived_at?: string | null;
   reminder_at?: string | null;
+  repeat_reminder_daily?: boolean | null;
 }
 
 export interface TaskFilterParams {
@@ -183,6 +187,7 @@ export interface ReminderRecord {
   title: string;
   message: string | null;
   status: ReminderStatus;
+  repeat_reminder_daily?: number;
   created_at: string;
 }
 
@@ -244,6 +249,9 @@ export interface GoalMilestoneRecord {
   completed: number;
   position: number;
   due_at: string | null;
+  task_id?: string | null;
+  project_id?: string | null;
+  target_date?: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -363,6 +371,28 @@ export interface BibleFavoriteWithVerse extends DailyVerseWithDetails {
   favorite_id: string;
   notes?: string | null;
   favorited_at: string;
+}
+
+// Focus Session Types
+export type FocusSessionStatus = "active" | "paused" | "completed" | "cancelled";
+
+export interface FocusSessionRecord {
+  id: string;
+  task_id: string | null;
+  title: string | null;
+  started_at: string;
+  ended_at: string | null;
+  duration_seconds: number;
+  status: FocusSessionStatus;
+  accumulated_paused_seconds: number;
+  last_paused_at: string | null;
+  created_at: string;
+}
+
+export interface FocusSessionState {
+  currentSession: FocusSessionRecord | null;
+  elapsedSeconds: number;
+  status: "ready" | "focusing" | "paused";
 }
 
 

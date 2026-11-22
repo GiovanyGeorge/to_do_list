@@ -15,6 +15,17 @@ interface GoalStoreState {
     milestones?: string[];
   }) => Promise<GoalWithDetails | null>;
   toggleMilestone: (goalId: string, milestoneId: string) => Promise<void>;
+  addMilestone: (
+    goalId: string,
+    input: string | { title: string; targetDate?: string; taskId?: string; projectId?: string }
+  ) => Promise<void>;
+  updateMilestone: (
+    goalId: string,
+    milestoneId: string,
+    input: { title?: string; targetDate?: string | null; taskId?: string | null; projectId?: string | null }
+  ) => Promise<void>;
+  deleteMilestone: (goalId: string, milestoneId: string) => Promise<void>;
+  reorderMilestones: (goalId: string, milestoneIds: string[]) => Promise<void>;
   deleteGoal: (id: string) => Promise<void>;
 }
 
@@ -84,6 +95,70 @@ export const useGoalStore = create<GoalStoreState>((set) => ({
     try {
       if (window.electronAPI?.toggleGoalMilestone) {
         await window.electronAPI.toggleGoalMilestone(milestoneId);
+        const updated = await window.electronAPI.getGoal(goalId);
+        if (updated) {
+          set((state) => ({
+            goals: state.goals.map((g) => (g.id === goalId ? updated : g)),
+          }));
+        }
+      }
+    } catch {
+      // error handling
+    }
+  },
+
+  addMilestone: async (goalId, input) => {
+    try {
+      if (window.electronAPI?.addGoalMilestone) {
+        await window.electronAPI.addGoalMilestone(goalId, input);
+        const updated = await window.electronAPI.getGoal(goalId);
+        if (updated) {
+          set((state) => ({
+            goals: state.goals.map((g) => (g.id === goalId ? updated : g)),
+          }));
+        }
+      }
+    } catch {
+      // error handling
+    }
+  },
+
+  updateMilestone: async (goalId, milestoneId, input) => {
+    try {
+      if (window.electronAPI?.updateGoalMilestone) {
+        await window.electronAPI.updateGoalMilestone(milestoneId, input);
+        const updated = await window.electronAPI.getGoal(goalId);
+        if (updated) {
+          set((state) => ({
+            goals: state.goals.map((g) => (g.id === goalId ? updated : g)),
+          }));
+        }
+      }
+    } catch {
+      // error handling
+    }
+  },
+
+  deleteMilestone: async (goalId, milestoneId) => {
+    try {
+      if (window.electronAPI?.deleteGoalMilestone) {
+        await window.electronAPI.deleteGoalMilestone(milestoneId);
+        const updated = await window.electronAPI.getGoal(goalId);
+        if (updated) {
+          set((state) => ({
+            goals: state.goals.map((g) => (g.id === goalId ? updated : g)),
+          }));
+        }
+      }
+    } catch {
+      // error handling
+    }
+  },
+
+  reorderMilestones: async (goalId, milestoneIds) => {
+    try {
+      if (window.electronAPI?.reorderGoalMilestones) {
+        await window.electronAPI.reorderGoalMilestones(goalId, milestoneIds);
         const updated = await window.electronAPI.getGoal(goalId);
         if (updated) {
           set((state) => ({

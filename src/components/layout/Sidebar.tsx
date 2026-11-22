@@ -34,11 +34,19 @@ export const Sidebar: React.FC = () => {
   const { enabled } = useMotion();
   const { playSound } = useSoundManager();
 
-  // Priority counts for open (not done) tasks
-  const openTasks = tasks.filter((t) => t.status !== "done");
-  const highCount = openTasks.filter((t) => t.priority === "high" || t.priority === "urgent").length;
-  const mediumCount = openTasks.filter((t) => t.priority === "medium").length;
-  const lowCount = openTasks.filter((t) => t.priority === "low").length;
+  // Priority counts for open (not done) tasks - single-pass memoized
+  const { highCount, mediumCount, lowCount } = React.useMemo(() => {
+    let high = 0;
+    let medium = 0;
+    let low = 0;
+    for (const t of tasks) {
+      if (t.status === "done") continue;
+      if (t.priority === "high" || t.priority === "urgent") high++;
+      else if (t.priority === "medium") medium++;
+      else if (t.priority === "low") low++;
+    }
+    return { highCount: high, mediumCount: medium, lowCount: low };
+  }, [tasks]);
 
   const primaryNavigation = [
     { name: t("nav.dashboard") || "Dashboard", href: "/", icon: LayoutGrid },

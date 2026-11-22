@@ -84,14 +84,43 @@ export class GoalRepository {
   }
 
   list(includeArchived = false): GoalWithDetails[] {
-    let sql = "SELECT id FROM goals";
+    let sql = "SELECT * FROM goals";
     if (!includeArchived) {
       sql += " WHERE archived_at IS NULL AND status != 'archived'";
     }
     sql += " ORDER BY created_at DESC";
 
-    const rows = this.db.prepare(sql).all() as { id: string }[];
-    return rows.map((r) => this.getById(r.id)!);
+    const goals = this.db.prepare(sql).all() as GoalRecord[];
+    if (goals.length === 0) return [];
+
+    const goalIds = goals.map((g) => g.id);
+    const placeholders = goalIds.map(() => "?").join(",");
+    const allMilestones = this.db
+      .prepare(
+        `SELECT * FROM goal_milestones WHERE goal_id IN (${placeholders}) ORDER BY position ASC, created_at ASC`
+      )
+      .all(...goalIds) as GoalMilestoneRecord[];
+
+    const milestonesByGoal = new Map<string, GoalMilestoneRecord[]>();
+    for (const m of allMilestones) {
+      if (!milestonesByGoal.has(m.goal_id)) milestonesByGoal.set(m.goal_id, []);
+      milestonesByGoal.get(m.goal_id)!.push(m);
+    }
+
+    return goals.map((goal) => {
+      const milestones = milestonesByGoal.get(goal.id) || [];
+      const total = milestones.length;
+      const completed = milestones.filter((m) => m.completed === 1).length;
+      const progress_percent = total > 0 ? Math.round((completed / total) * 100) : 0;
+
+      return {
+        ...goal,
+        milestones,
+        progress_percent,
+        completed_milestones_count: completed,
+        total_milestones_count: total,
+      };
+    });
   }
 
   toggleMilestone(milestoneId: string): boolean {
@@ -111,27 +140,85 @@ export class GoalRepository {
     return nextCompleted === 1;
   }
 
-  addMilestone(goalId: string, title: string): GoalMilestoneRecord {
+  addMilestone(
+    goalId: string,
+    titleOrInput: string | { title: string; targetDate?: string; taskId?: string; projectId?: string }
+  ): GoalMilestoneRecord {
     const id = crypto.randomUUID();
     const now = new Date().toISOString();
     const countRes = this.db
-      .prepare(
-        "SELECT COUNT(*) as count FROM goal_milestones WHERE goal_id = ?"
-      )
+      .prepare("SELECT COUNT(*) as count FROM goal_milestones WHERE goal_id = ?")
       .get(goalId) as { count: number } | undefined;
     const position = countRes?.count || 0;
 
+    const title = typeof titleOrInput === "string" ? titleOrInput : titleOrInput.title;
+    const targetDate = typeof titleOrInput === "object" ? titleOrInput.targetDate || null : null;
+    const taskId = typeof titleOrInput === "object" ? titleOrInput.taskId || null : null;
+    const projectId = typeof titleOrInput === "object" ? titleOrInput.projectId || null : null;
+
     this.db
-      .prepare(
-        "INSERT INTO goal_milestones (id, goal_id, title, completed, position, created_at, updated_at) VALUES (?, ?, ?, 0, ?, ?, ?)"
-      )
-      .run(id, goalId, title, position, now, now);
+      .prepare(`
+        INSERT INTO goal_milestones (
+          id, goal_id, title, completed, position, target_date, task_id, project_id, created_at, updated_at
+        ) VALUES (?, ?, ?, 0, ?, ?, ?, ?, ?, ?)
+      `)
+      .run(id, goalId, title, position, targetDate, taskId, projectId, now, now);
 
     return this.db
-      .prepare(
-        "SELECT * FROM goal_milestones WHERE id = ?"
-      )
+      .prepare("SELECT * FROM goal_milestones WHERE id = ?")
       .get(id) as GoalMilestoneRecord;
+  }
+
+  updateMilestone(
+    milestoneId: string,
+    input: { title?: string; targetDate?: string | null; taskId?: string | null; projectId?: string | null }
+  ): GoalMilestoneRecord | null {
+    const sets: string[] = ["updated_at = ?"];
+    const params: unknown[] = [new Date().toISOString()];
+
+    if (input.title !== undefined) {
+      sets.push("title = ?");
+      params.push(input.title);
+    }
+    if (input.targetDate !== undefined) {
+      sets.push("target_date = ?");
+      params.push(input.targetDate);
+    }
+    if (input.taskId !== undefined) {
+      sets.push("task_id = ?");
+      params.push(input.taskId);
+    }
+    if (input.projectId !== undefined) {
+      sets.push("project_id = ?");
+      params.push(input.projectId);
+    }
+
+    params.push(milestoneId);
+    this.db
+      .prepare(`UPDATE goal_milestones SET ${sets.join(", ")} WHERE id = ?`)
+      .run(...params);
+
+    return this.db
+      .prepare("SELECT * FROM goal_milestones WHERE id = ?")
+      .get(milestoneId) as GoalMilestoneRecord | undefined || null;
+  }
+
+  deleteMilestone(milestoneId: string): boolean {
+    const res = this.db.prepare("DELETE FROM goal_milestones WHERE id = ?").run(milestoneId);
+    return res.changes > 0;
+  }
+
+  reorderMilestones(goalId: string, milestoneIds: string[]): boolean {
+    const updateStmt = this.db.prepare(
+      "UPDATE goal_milestones SET position = ? WHERE id = ? AND goal_id = ?"
+    );
+    const tx = this.db.transaction(() => {
+      milestoneIds.forEach((id, index) => {
+        updateStmt.run(index, id, goalId);
+      });
+    });
+    tx();
+    return true;
   }
 
   delete(id: string): boolean {

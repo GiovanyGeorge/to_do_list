@@ -84,6 +84,13 @@ export function registerTaskIpc(taskService: TaskService): void {
   );
 
   ipcMain.handle(
+    "tasks:update-subtask",
+    async (_event, subtaskId: string, title: string) => {
+      return taskService.updateSubtask(subtaskId, title);
+    }
+  );
+
+  ipcMain.handle(
     "tasks:delete-subtask",
     async (_event, subtaskId: string) => {
       return taskService.deleteSubtask(subtaskId);

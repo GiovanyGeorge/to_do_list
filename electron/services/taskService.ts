@@ -162,6 +162,10 @@ export class TaskService {
     return this.repo.toggleSubtask(subtaskId, completed);
   }
 
+  updateSubtask(subtaskId: string, title: string) {
+    return this.repo.updateSubtask(subtaskId, title);
+  }
+
   deleteSubtask(subtaskId: string): boolean {
     return this.repo.deleteSubtask(subtaskId);
   }
